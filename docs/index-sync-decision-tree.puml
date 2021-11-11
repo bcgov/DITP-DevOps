@@ -11,7 +11,8 @@ if (Indexes Synced: false) then (yes)
   **'Error processing real-time index queue'**;
 
   if(Recent instances of the log message exist?) then (yes)
-    :Perform a **rollout** of the API pods.;
+    :Perform a **rollout** of the API pods, 
+    and wait for it to complete;
     note left
       This will start a rolling deployment
       of the API pods, creating new pods

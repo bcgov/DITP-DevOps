@@ -1,0 +1,41 @@
+@startuml
+
+:**Index Sync Notification Received**;
+start
+:Confirm the alert using the ""bcgov/orgbook-configurations"" openshift 
+  ""./manage indexSynced"" script.;
+
+if (Indexes Synced: false) then (yes)
+  :Log into the affected OCP environment.;
+  :Review the API pod logs for recent instances of
+  **'Error processing real-time index queue'**;
+
+  if(Recent instances of the log message exist?) then (yes)
+    :Perform a **rollout** of the API pods.;
+    note left
+      This will start a rolling deployment
+      of the API pods, creating new pods
+      with initialized real-time indexing
+      queues.  The rolling deployment
+      ensures other services are not
+      interrupted during the process.
+    end note
+  else (no)
+  endif
+    repeat :Use the ""bcgov/orgbook-configurations"" \nopenshift ""./manage updateSearchIndex"" script \nto update the search indexes.;
+      :Use the ""./manage indexSynced"" script 
+      to confirm the indexes are fully synchronized;
+      backward :Adjust the date used with \n""./manage updateSearchIndex""; \nsubtract a day.; 
+    repeat while (Indexes Synced: true) is (no) not (yes)
+else (no)
+    :Transient issue or false positive.;
+    :Monitor for a while to see if the issues
+    persist.;
+    note right
+      The BC Registries agent runs
+      every half hour.
+    end note
+endif
+
+stop
+@enduml

@@ -4,6 +4,11 @@ The following workflow describes the steps to confirm and resolve an alert condi
 
 ![bcovrin decision tree](https://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/bcgov/DITP-DevOps/main/docs/bcovrin-decision-tree.puml)
 
+## What does an alert look like?
+
+![bcovrin-down-alert](./images/bcovrin-down-alert.png)
+
+
 ## I don't have SSH access - Who do I notify?
 
 A list of team members who have SSH access to the BCovrin instances will be made available to those assigned to the alert channels.  If in question, you can ask on the alerts channels.

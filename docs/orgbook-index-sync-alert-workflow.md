@@ -4,6 +4,10 @@ The following workflow describes the steps to confirm and resolve an index sync 
 
 ![index sync decision tree](https://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/bcgov/DITP-DevOps/main/docs/index-sync-decision-tree.puml)
 
+## What does an alert look like?
+
+![orgbook-index-sync-alert](./images/orgbook-index-sync-alert.png)
+
 ## About OrgBook Indexing
 
 Indexing of credentials received by outside parties such as BC Registries, Liquor and Cannabis Regulation Branch, Ministry of Energy, Mines and Low-carbon Innovation, Ministry of Environment and Climate Change Strategy, and Investment Agriculture Foundation BC, is performed in real-time by the [SolrQueue](https://github.com/bcgov/aries-vcr/blob/master/server/vcr-server/vcr_server/utils/solrqueue.py) class.  This class runs as a threaded process inside OrgBook's (Aries VCR) API.

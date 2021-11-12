@@ -35,7 +35,7 @@ Links to the Topology Console can be found here; [Developer - Topology Console](
 ## Recycling a pod or pods
 
 Use the [bcgov/orgbook-configurations openshift `./manage` script](./orgbook-configurations-manage-script.md)'s:
-- [`recycle` command](./orgbook-configurations-manage-script.md#recycle)
+- [`recycle` command](./orgbook-configurations-manage-script.md#recycle-command)
 
 ## Performing a rollout
 

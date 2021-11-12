@@ -5,7 +5,7 @@ start
 :Confirm the alert by clicking on the 
 ""/api/search/credential/topic/facets?<queryParams>""
 link in the alert.;
-if (Responce contains the expected search results) then (no)
+if (Response contains the expected search results) then (no)
   :Log into the affected OCP environment.;
   repeat :Review the state of the DB, Search Engine (Solr), and the API pods.\n//Using the **Developer Topology** view works best.//;
     if(Issues with the DB Pod?) then (yes)
@@ -13,7 +13,7 @@ if (Responce contains the expected search results) then (no)
       **Recycle** or **Rollout** if needed.
 
       A rollout can help get a pod to be
-      scheduled on an new node in the case 
+      scheduled on a new node in the case 
       the pod is stuck pending or starting on
       and overloaded node after an unexpected 
       restart or evacuation.;
@@ -27,13 +27,13 @@ if (Responce contains the expected search results) then (no)
       **Recycle** or **Rollout** if needed.
       
       A rollout can help get a pod to be
-      scheduled on an new node in the case 
+      scheduled on a new node in the case 
       the pod is stuck pending or starting on
       and overloaded node after an unexpected 
       restart or evacuation.;
       :Ensure the Search Engine is fully up and running.
       You won't be able to resolve any issues with 
-      the API pods until the Search Engine is savailable.;
+      the API pods until the Search Engine is available.;
     else (no)
     endif
     if(Issues with the API Pods?) then (yes)
@@ -41,7 +41,7 @@ if (Responce contains the expected search results) then (no)
       **Rollout** if needed.
       
       A rollout can help get a pod to be
-      scheduled on an new node in the case 
+      scheduled on a new node in the case 
       the pod is stuck pending or starting on
       and overloaded node after an unexpected 
       restart or evacuation.;

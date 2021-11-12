@@ -1,15 +1,15 @@
 @startuml
 
-:**Credential Verification Alert Notification Received**;
+:**OrgBook (Search Result) Alert Notification Received**;
 start
 :Confirm the alert by clicking on the 
-""/api/credential/{credentialId}/verify""
-in the alert.;
-if (Responce contains: \n"""success": true"") then (no)
+""/api/search/credential/topic/facets?<queryParams>""
+link in the alert.;
+if (Responce contains the expected search results) then (no)
   :Log into the affected OCP environment.;
-  repeat :Review the state of the Wallent, Agent and API pods.\n//Using the **Developer Topology** view works best.//;
-    if(Issues with the Wallet Pod?) then (yes)
-      :Resolve the issues with the Wallet pod.
+  repeat :Review the state of the DB, Search Engine (Solr), and the API pods.\n//Using the **Developer Topology** view works best.//;
+    if(Issues with the DB Pod?) then (yes)
+      :Resolve the issues with the DB pod.
       **Recycle** or **Rollout** if needed.
 
       A rollout can help get a pod to be
@@ -17,22 +17,23 @@ if (Responce contains: \n"""success": true"") then (no)
       the pod is stuck pending or starting on
       and overloaded node after an unexpected 
       restart or evacuation.;
-      :Ensure the Wallet database is
-      fully up and running.
-      You won't be able to resolve any issues
-      with the agents until the database is
-      available.;
+      :Ensure the database is fully up and running.
+      You won't be able to resolve any issues with 
+      the API pods until the database is available.;
     else (no)
     endif
-    if(Issues with the Agent Pods?) then (yes)
-      :Resolve the issues with the Agent pods.
-      **Rollout** if needed.
+    if(Issues with the Search Engine Pod?) then (yes)
+      :Resolve the issues with the Search Engine pod.
+      **Recycle** or **Rollout** if needed.
       
       A rollout can help get a pod to be
       scheduled on an new node in the case 
       the pod is stuck pending or starting on
       and overloaded node after an unexpected 
       restart or evacuation.;
+      :Ensure the Search Engine is fully up and running.
+      You won't be able to resolve any issues with 
+      the API pods until the Search Engine is savailable.;
     else (no)
     endif
     if(Issues with the API Pods?) then (yes)

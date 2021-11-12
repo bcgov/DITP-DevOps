@@ -2,7 +2,9 @@
 
 The following workflow describes the steps to confirm and resolve a credential verification alert condition on one of the OrgBook instances.  Addition information regarding the associated error condition and its impact, along with details of the steps to resolve it can be found below.
 
-![index sync decision tree](https://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/bcgov/DITP-DevOps/main/docs/diagrams/credential-verification-decision-tree.puml)
+<p align="center">
+  <img src="https://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/bcgov/DITP-DevOps/main/docs/diagrams/credential-verification-decision-tree.puml">
+</p>
 
 ## What does an alert look like?
 

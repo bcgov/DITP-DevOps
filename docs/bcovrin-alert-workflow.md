@@ -2,12 +2,11 @@
 
 The following workflow describes the steps to confirm and resolve an alert condition on one of the BCovrin Ledger instances.  Additional details can be found below.
 
-![bcovrin decision tree](https://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/bcgov/DITP-DevOps/main/docs/bcovrin-decision-tree.puml)
+![bcovrin decision tree](https://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/bcgov/DITP-DevOps/main/docs/diagrams/bcovrin-decision-tree.puml)
 
 ## What does an alert look like?
 
 ![bcovrin-down-alert](./images/bcovrin-down-alert.png)
-
 
 ## I don't have SSH access - Who do I notify?
 

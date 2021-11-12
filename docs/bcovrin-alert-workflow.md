@@ -15,4 +15,4 @@ The following BCovrin instances are hosted on Digital Ocean.
 
 ## I don't have SSH access - Who do I notify?
 
-ToDo - Fill out this section.
+A list of team members who have SSH access to the BCovrin instances will be made available to those assigned to the alert channels.  If in question, you can ask on the alerts channels.

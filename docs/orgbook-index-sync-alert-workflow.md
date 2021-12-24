@@ -10,7 +10,7 @@ The following workflow describes the steps to confirm and resolve an index sync 
 
 ## About OrgBook Indexing
 
-Indexing of credentials received by outside parties such as BC Registries, Liquor and Cannabis Regulation Branch, Ministry of Energy, Mines and Low-carbon Innovation, Ministry of Environment and Climate Change Strategy, and Investment Agriculture Foundation BC, is performed in real-time by the [SolrQueue](https://github.com/bcgov/aries-vcr/blob/master/server/vcr-server/vcr_server/utils/solrqueue.py) class.  This class runs as a threaded process inside OrgBook's (Aries VCR) API.
+Indexing of credentials received by outside parties such as BC Registries, Liquor and Cannabis Regulation Branch, Ministry of Energy, Mines and Low-carbon Innovation, Ministry of Environment and Climate Change Strategy, and Investment Agriculture Foundation BC, is performed in real-time by the [SolrQueue](https://github.com/bcgov/aries-vcr/blob/main/server/vcr-server/vcr_server/utils/solrqueue.py) class.  This class runs as a threaded process inside OrgBook's (Aries VCR) API.
 
 ### What does it mean for indexes to be synchronized?
 

@@ -1,13 +1,12 @@
 @startuml
 
-:**Credential Verification Alert Notification Received**;
+:**Aries Mediator Service Alert Notification Received**;
 start
 :Confirm the alert by clicking on the 
-""/api/credential/{credentialId}/verify""
-in the alert.;
-if (Responce contains: \n"""success": true"") then (no)
-  :Log into the affected OCP environment.;
-  repeat :Review the state of the Wallet, Agent and API pods.\n//Using the **Developer Topology** view works best.//;
+""/status/ready"" url in the alert.;
+if (Responce contains: \n"""ready": true"") then (no)
+  :Log into the affected ""Shared Services"" OCP environment.;
+  repeat :Review the state of the Wallet (db), Agent, and Proxy pods.\n//Using the **Developer Topology** view works best.//;
     if(Issues with the Wallet Pod?) then (yes)
       :Resolve the issues with the Wallet pod.
       **Recycle** or **Rollout** if needed.
@@ -35,8 +34,8 @@ if (Responce contains: \n"""success": true"") then (no)
       restart or evacuation.;
     else (no)
     endif
-    if(Issues with the API Pods?) then (yes)
-      :Resolve the issues with the API pods.
+    if(Issues with the Proxy Pods?) then (yes)
+      :Resolve the issues with the Proxy pods.
       **Rollout** if needed.
       
       A rollout can help get a pod to be

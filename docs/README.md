@@ -8,3 +8,4 @@ The following documents contain the workflows (decision trees) and supporting de
 - [OrgBook Index Sync Alert Workflow](./orgbook-index-sync-alert-workflow.md)
 - [OrgBook Credential Verification Alert Workflow](./orgbook-credential-verification-alert-workflow.md)
 - [OrgBook Search Result Alert Workflow](./orgbook-search-result-alert-workflow.md)
+- [Aries Mediator Service Uptime Alert Workflow](./aries-mediator-service-alert-workflow.md)

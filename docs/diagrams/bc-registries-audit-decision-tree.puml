@@ -1,0 +1,18 @@
+@startuml
+
+:**Error Messages from BC Registries Audit Notification Received - Corp Status mis-match for: FM0877150 BC Reg: "HIS", OrgBook: "ACT"**;
+start
+:Confirm the alert by going to the 
+""Orgbook.gov.bc.ca"" url;
+if (Indexes Synced: false) then (yes)
+  :Log into the affected OCP environment;
+  :Run ./manage -p bc -e prod deleteTopic FM0877150 script in orgbook configration; 
+  :Run ./manage -e prod requeueOrganization FM0877150 in von-bc-registries-agent-configurations;
+  :Run ./manage -e prod runPipeline in von-bc-registries-agent-configurations;
+  :Determine the BC registries error meesage is resloved now by logging into Orgbook.gov.bc.ca url;
+else (no)
+    :Transient issue or false positive.;
+    :Monitor for a while to see if the issues persist.;
+endif
+stop
+@enduml

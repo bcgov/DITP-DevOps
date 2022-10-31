@@ -1,18 +1,29 @@
 @startuml
 
-:**Error Messages from BC Registries Audit Notification Received;
+:**Error Messages from BC Registries Audit Notification Received**;
 start
-:Confirm the alert by going to the 
-""Orgbook.gov.bc.ca"" url;
-if (Error Message: false) then (yes)
+:Confirm the alert by browsing to ""Orgbook.gov.bc.ca"" to verify 
+the alert received in BC Registries Audit Notification is not false positive 
+by ensuring the data of Orgbook matches with BC Registries;
+if (Issue Confirmed: false) then (yes)
   :Log into the affected OCP environment;
-  :Run ./manage deleteTopic script in orgbook configration github repo; 
-  :Run ./manage requeueOrganization script in von-bc-registries-agent-configurations github repo;
-  :Run ./manage runPipeline in von-bc-registries-agent-configurations github repo;
-  :Determine the BC registries error meesage is resloved now by logging into Orgbook.gov.bc.ca url;
-else (no)
+  :Run orgbook-configration \n./manage deleteTopic \nscript(s) as indicated by the audit notifications; 
+  :Run von-bc-registries-agent-configurations \n./manage requeueOrganization \nscript(s) as indicated by the audit notifications;
+  :Run von-bc-registries-agent-configurations \n./manage runPipeline \nscript;
+  note left
+      The records get updated after the audit is run, 
+      so by the time you go to verify, 
+      the issue has already been fixed.
+    end note
+  :Verify the indicated issue is resolved by browsing to orgbook.gov.bc.ca;
+  :Issue fixed already;
+  else (no)
     :Transient issue or false positive.;
-    :Monitor for a while to see if the issues persist.;
+      note right
+False positives in the audit script notifications 
+are extremely rare. More often what looks like 
+a transient issue is a timing issue
+    end note
 endif
 stop
 @enduml

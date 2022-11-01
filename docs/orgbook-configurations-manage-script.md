@@ -70,3 +70,17 @@ Waiting for wallet-bc to scale to zero ................
 deploymentconfig.apps.openshift.io/wallet-bc scaled
 Waiting for wallet-bc to scale up ............
 ```
+
+## `DeleteTopic` command
+
+This command is used to Delete the specified topic from the OrgBook database.
+
+For example:
+```
+RACHAUHA@NE022855 MINGW64 /c/git/orgbook-configurations/openshift (main)
+$ ./manage -p bc -e prod deleteTopic BC1280573
+
+This command  will delete the specific topic "BC1280573" from the Orgbook database in prod environment
+
+<topic_id> is the 'subject_id' of the Topic to delete, e.g. BC1280573
+```

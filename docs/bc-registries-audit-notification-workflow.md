@@ -27,7 +27,7 @@ Synchronization of the data is affected by updates being made in BC registries. 
 
 Other things that affects synchronization is timing. So in case where the audit says that there's a missing record in BC in Org book, and then you go in later to take a look at that data and it's there, that's really a timing issue. So basically what happened is the audit captured the fact that data was in BC Reg but not in Org book before the data was actually sent over to the orgbook.So the timing issue is between when the audit script is run and when data is actually being synchronized.
 
-There are bunch of services always running. So if those services are interrupted or Internet connectivity is down, that can affrct the synchorization of data for a little while.
+There are bunch of services always running. So if those services are interrupted or Internet connectivity is down, that can affect the synchorization of data for a little while.
 
 ## Digital Trust Monitoring Services OCP Environments
 

@@ -13,30 +13,33 @@ The following workflow describes the steps to confirm and resolve a BC Registrie
 
 ### What does it mean for the BC Reg and OrgBook data to match (pass the audit)?
 
-
+There should be no discrepancy of data between BC Reg and Orgbook data inorder to pass the audit. That means corporation name, corporation status, corporation type,business number,registration number,jurisdiction number should be matching between BC Reg and Orgbook exactly to pass the audit.
 
 
 ### What is the impact of the data being out of sync?
 
-
+When the data is out of sync the dispalyed data of companies in orgbook is incorrect.In order To synchronize their information we want to make sure that we're providing them with  the correct information.If its incorrect, we're misrepresenting the actual corporate data and that needs to be fixed.
 
 
 ### What affects the synchronization of the data?
 
+Synchronization of the data is affected by updates being made in BC registries. Some of those updates are not associated with database event records. So then if there's no database event record, then the BC registries agent doesn't know to pick up those changes and then send them over to the org book. So that's that's one major discrepancy is when things are done manually on the VC registry side.There is no way for us to detect that that's actually happened until the audit is done.
 
+Other things that affects synchronization is timing. So in case where the audit says that there's a missing record in BC in Org book, and then you go in later to take a look at that data and it's there, that's really a timing issue. So basically what happened is the audit captured the fact that data was in BC Reg but not in Org book before the data was actually sent over to the orgbook.So the timing issue is between when the audit script is run and when data is actually being synchronized.
 
+There are bunch of services always running. So if those services are interrupted or Internet connectivity is down, that can affrct the synchorization of data for a little while.
 
-### Why data discrepancies are found?
+## Digital Trust Monitoring Services OCP Environments
 
+Links to the Deployment Configurations Console can be found here; [Administrator - Deployment Configurations Console](./digital-trust-monitoring-services-environments)
 
+## BC Registries Agent Configurations `./manage` script
 
-## OrgBook OCP Environments
+General information regarding the bcgov/bc registries-agent-configurations openshift `./manage` script can be found here; [bcgov/bc-registries-agent-configurationsopenshift `./manage` script](./bc-registries-agent-configurations-manage-script.md)
 
-Links to the Deployment Configurations Console can be found here; [Administrator - Deployment Configurations Console](./orgbook-instances-and-environments.md#administrator---deployment-configurations-console)
-
-## orgbook-configurations `./manage` script
-
-General information regarding the bcgov/orgbook-configurations openshift `./manage` script can be found here; [bcgov/orgbook-configurations openshift `./manage` script](./orgbook-configurations-manage-script.md)
+Specifics regarding the commands referenced in this workflow can be found here:
+- [`requeueOrganization` command](./bc-registries-agent-configurations-manage-script.md#requeueOrganization-command)
+- [`queueOrganization` command](./bc-registries-agent-configurations-manage-script.md#queueOrganization-command)
 
 
 ## What causes the alert condition to surface?
@@ -73,10 +76,6 @@ Commands in the following forms should be run using the openshift `./manage` scr
 Commands in the following forms should be run using the openshift `./manage` scripts from [von-bc-registries-agent-configurations](https://github.com/bcgov/von-bc-registries-agent-configurations):
 - `./manage -e <env> queueOrganization <business_number>`
 - `./manage -e <env> requeueOrganization <business_number>`
-
-### DeleteTopic?
-
-
 
 ## Audit scripts for Aries VCR/OrgBook and BC Registries Issuer
 

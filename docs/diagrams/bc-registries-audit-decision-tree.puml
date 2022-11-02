@@ -1,18 +1,16 @@
 @startuml
-
 :**Error Messages from BC Registries Audit Notification Received**;
 start
-:Confirm the alert by browsing to ""Orgbook.gov.bc.ca"" and search the company 
-corporated number to verify the alert received in BC Registries Audit Notification
-is not false positive by ensuring the data of Orgbook matches with BC Registries;
-if (Issue Confirmed) then (yes)
-  :Log into the affected OCP environment;
-  :Run orgbook-configration \n./manage deleteTopic \nscript(s) as indicated by the audit notifications; 
-  :Run von-bc-registries-agent-configurations \n./manage requeueOrganization \nscript(s) as indicated by the audit notifications;
-  :Run von-bc-registries-agent-configurations \n./manage runPipeline \nscript;
-  :Verify the indicated issue is resolved by browsing to orgbook.gov.bc.ca;
+  :Browse to ""orgbook.gov.bc.ca"".  Search for the reported 
+  corp numbers.  For each, verify the reported issue(s) still exist.;
+  if (Issue(s) Confirmed) then (yes)
+    :Log into the affected OCP environment;
+    :Run the ""orgbook-configration""\n""./manage deleteTopic""\nscript as indicated by the audit notifications; 
+    :Run the ""von-bc-registries-agent-configurations""\n""./manage requeueOrganization""\nscript as indicated by the audit notifications;
+    :Run the ""von-bc-registries-agent-configurations""\n""./manage runPipeline""\nscript to reprocess the affected records;
+    :Verify the reported issue(s) are resolved\nby browsing to ""orgbook.gov.bc.ca"" and\nsearching for the reported corp numbers to\nverify the results.;
   else (no)
-    :Timing issue;
-endif
+    :Timing issue.\nThe issue was fixed automatically\nfollowing the audit script run.;
+  endif
 stop
 @enduml

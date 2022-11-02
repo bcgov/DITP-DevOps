@@ -36,10 +36,6 @@ null, process_msg = null where corp_num in ('0002365');"
 
 update event_by_corp_filing set process_success = null, process_date = null, process_msg = null where corp_num in ('0002365');
 UPDATE 1
-
-This command will requeue the specific organisation "1280573" from the BC Registries database in dev environment
-
-<corp_num>, is the corp_num from corp_history_log for the organization to requeue/reprocess.
 ```
     
 
@@ -60,8 +56,4 @@ Executing command on 7cba16-dev/event-db-primary-20-9x4rc:
 
 insert into event_by_corp_filing (system_type_cd, corp_num, prev_event_id, prev_event_date, last_event_id, last_event_date, entry_date) select 'BC_REG', 'BC0002365', 0, '0001-01-01', last_event_id, last_event_date, now() from event_by_corp_filing where record_id = (select max(record_id) from event_by_corp_filing);
 INSERT 0 1
-
-This command will queue the specific organisation "1280573" from the BC Registries database in dev environment
-
-<corp_num>, is the corp_num from BC Registries for the organization to queue/process.
 ```

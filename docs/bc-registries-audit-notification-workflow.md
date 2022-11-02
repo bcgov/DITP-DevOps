@@ -1,6 +1,6 @@
 # BC Registries Audit Notification Workflow
 
-The following workflow describes the steps to confirm and resolve a BC Registries Audit alert notification. Additional information regarding the associated error condition and its impact, along with details of the steps to resolve can be found below.
+The following workflow describes the steps to confirm and resolve a BC Registries Audit alert notification. Additional information regarding the associated error condition and its impact, along with details of the steps to resolve it can be found below.
 
 <p align="center">
   <img src="https://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/bcgov/DITP-DevOps/main/docs/diagrams/bc-registries-audit-decision-tree.puml">
@@ -10,7 +10,7 @@ The following workflow describes the steps to confirm and resolve a BC Registrie
 
 ![BC-Registries-Audit-Notification](./images/bc-registries-audit-notification.png)
 
-###  About the BC Registries Audit Scripts
+### What does it take for the BC Reg and OrgBook data to pass the audit?
 
 The data must exist in both the BC Registries and OrgBook Databases, and the data must match exactly.  To match, the corporation name, corporation status, corporation type, business number, registration number, and  jurisdiction of the business in both BC Registries and OrgBook must all match.
 

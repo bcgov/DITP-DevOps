@@ -58,9 +58,10 @@ Log into the affected OCP environment and run the following scripts in the follo
 ./manage -p bc -e prod deleteTopic BC0441779
 ./manage -e prod requeueOrganization 0441779
 ./manage -e prod queueOrganization 1383101
+./manage -e test runPipeline
 ```
 
-In this example, the corporation registration date and corporation name mis-match represents that there is data mis-match between Orgbook and BC Reg. In order to fix the data issue, the topic needs to be deleted in OrgBook, and must be requeued from BC Registries so the data issue is fixed.
+In this example, the corporation registration date and corporation name mis-match represents that there is data mis-match between Orgbook and BC Reg. In order to fix the data issue, the topic needs to be deleted in OrgBook, and must be requeued from BC Registries so that the data issue is fixed.
 
 The first line and third line represents the status of corporation "BC0111208" in OrgBook is incorrect and must be deleted and re-processed.
 
@@ -68,11 +69,11 @@ The second line and fourth line will Requeue "0111208" and "0441779" in BC Regis
 
 The fifth line will queue "0111208" in BC Registries if that hasnt already been processed.
 
-Running the following commands in following order will solve the data mis-match issue and there wont be any data disperancy between Orgbook and BC Registries.
-
 Running the ```./manage -e test runPipeline``` script in von bc registries will resolve any timing related issues.
 
-In order to verify the reported issues are resolved now, browse to ""orgbook.gov.bc.ca"" search for the reported corporation numbers.
+Running the following commands in following order will solve the data mis-match issue and there wont be any data disperancy between Orgbook and BC Registries.
+
+In order to verify, browse to ""orgbook.gov.bc.ca"" search for the reported corporation numbers and ensure the reported issues are resolved now.
 
 The commands should be run in the order listed, however, if, for some reason, you need to run the commands in a batch, the `orgbook-configurations` scripts should always be run first.
 

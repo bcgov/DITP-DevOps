@@ -49,7 +49,7 @@ Confirm the alert by browsing to ""orgbook.gov.bc.ca"" and search for the corpor
 
 Once the alert is confirmed
 
-Log into the affected OCP environment and run the following scripts in the following order;
+Log into the affected OCP environment and run the scripts in the following order;
 
 
 ```

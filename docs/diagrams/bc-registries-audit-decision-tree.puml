@@ -5,8 +5,8 @@ start
   corp numbers.  For each, verify the reported issue(s) still exist.;
   if (Issue(s) Confirmed) then (yes)
     :Log into the affected OCP environment;
-    :Run the ""orgbook-configration""\n""./manage deleteTopic""\nscript as indicated by the audit notifications; 
-    :Run the ""von-bc-registries-agent-configurations""\n""./manage requeueOrganization""\nscript as indicated by the audit notifications;
+    :If indicated by the audit notifications,\nrun the ""orgbook-configration""\n""./manage deleteTopic""\nscript as specified; 
+    :Run the ""von-bc-registries-agent-configurations""\n""./manage requeueOrganization""\nand/or\n""./manage queueOrganisation""\nscripts as indicated by the audit notifications;
     :Run the ""von-bc-registries-agent-configurations""\n""./manage runPipeline""\nscript to reprocess the affected records;
     :Verify the reported issue(s) are resolved\nby browsing to ""orgbook.gov.bc.ca"" and\nsearching for the reported corp numbers to\nverify the results.;
   else (no)

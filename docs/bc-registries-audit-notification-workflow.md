@@ -10,6 +10,11 @@ The following workflow describes the steps to confirm and resolve a BC Registrie
 
 ![BC-Registries-Audit-Notification](./images/bc-registries-audit-notification.png)
 
+### Explaination of the alert
+
+In this example, the corporation registration date and corporation name mis-match represents that there is data mis-match between Orgbook and BC Reg. In order to fix the data issue, the topic needs to be deleted in OrgBook, and must be requeued from BC Registries.
+
+
 ##  About the BC Registries Audit Scripts
 
 ### What does it take for the BC Reg and OrgBook data to pass the audit?
@@ -43,13 +48,13 @@ For Example: Corp Registration Date mis-match for: BC0111208 BC Reg: "2004-03-26
 Corp Name mis-match for: BC0441779 BC Reg: "0441779 B.C. LTD.", OrgBook: "441779 B.C. LTD."
 Topic not found for: BC1383101
 
-### What steps needs to be taken to resolve this error?
+### What steps are needed to resolve the issue?
 
-In order to solve the alert above:
+In order to solve the issue above:
 
-Confirm the alert by browsing to ""orgbook.gov.bc.ca"" and search for the corporation number there to verify the alert received in BC Registries Audit Notification still exists.
+Confirm the issue by browsing to ""orgbook.gov.bc.ca"" and search for the corporation number there to verify the issue received in BC Registries Audit Notification still exists.
 
-Once the alert is confirmed
+Once the issue is confirmed
 
 Log into the affected OCP environment and run the scripts in the following order;
 
@@ -63,7 +68,7 @@ Log into the affected OCP environment and run the scripts in the following order
 ./manage -e test runPipeline
 ```
 
-In this example, the corporation registration date and corporation name mis-match represents that there is data mis-match between Orgbook and BC Reg. In order to fix the data issue, the topic needs to be deleted in OrgBook, and must be requeued from BC Registries so that the data issue is fixed.
+Running the commands above in following order will solve the data mis-match issue and there wont be any data disperancy between Orgbook and BC Registries.
 
 The first line and third line represents the status of corporation "BC0111208" in OrgBook is incorrect and must be deleted and re-processed.
 
@@ -73,18 +78,9 @@ The fifth line will queue "0111208" in BC Registries if that hasnt already been 
 
 Running the ```./manage -e test runPipeline``` script in von bc registries will resolve any timing related issues.
 
-Running the following commands in following order will solve the data mis-match issue and there wont be any data disperancy between Orgbook and BC Registries.
+In order to verify, browse to ""orgbook.gov.bc.ca"" and search for the reported corporation numbers to ensure the reported issues are resolved now.
 
-In order to verify, browse to ""orgbook.gov.bc.ca"" search for the reported corporation numbers and ensure the reported issues are resolved now.
-
-The commands should be run in the order listed, however, if, for some reason, you need to run the commands in a batch, the `orgbook-configurations` scripts should always be run first.
-
-Commands in the following forms should be run using the openshift `./manage` scripts from [orgbook-configurations](https://github.com/bcgov/orgbook-configurations):
-- `./manage -p bc -e <env> deleteTopic <business_number>`
-
-Commands in the following forms should be run using the openshift `./manage` scripts from [von-bc-registries-agent-configurations](https://github.com/bcgov/von-bc-registries-agent-configurations):
-- `./manage -e <env> queueOrganization <business_number>`
-- `./manage -e <env> requeueOrganization <business_number>`
+For more details on this script, please refer to [BC Registries Agent Configurations `./manage` script](#bc-registries-agent-configurations-manage-script) and [Orgbook-configurations openshift `./manage` script](#orgbook-configurations-manage-script)
 
 ## Digital Trust Monitoring Services OCP Environments
 

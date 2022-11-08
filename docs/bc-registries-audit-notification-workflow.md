@@ -14,6 +14,13 @@ The following workflow describes the steps to confirm and resolve a BC Registrie
 
 In this example, the corporation registration date and corporation name mis-match represents that there is data mis-match between Orgbook and BC Reg. In order to fix the data issue, the topic needs to be deleted in OrgBook, and must be requeued from BC Registries.
 
+Running the ./manage commands above in following order will solve the data mis-match issue and there wont be any data disperancy between Orgbook and BC Registries.
+
+The deleteTopic command represents the status of corporation "BC0111208" in OrgBook is incorrect and must be deleted and re-processed.
+
+The requeue command  will requeue the corporation "0111208" and "0441779" in BC Registries if that hasnt already been processed.
+
+The queue command will queue the corporation "1383101" in BC Registries if that hasnt already been processed.
 
 ##  About the BC Registries Audit Scripts
 
@@ -40,13 +47,6 @@ Timing
 Networking issues and unexpected pod evacuations or restarts
 - When these situations occur, it can affect one or more of the components needed to perform the credential processing on either the BC Registries or OrgBook side.  These situations typically only cause a temporary discrepancy that will be fixed the next time the BC Registry Agent's event processor runs.
 
-## What causes the alert condition to surface?
-
-In general we see these notifications when the BC Registries Audit scripts detect any discrepancy between the data in the BC Registries database(s) and the data in the OrgBook.
-
-For Example: Corp Registration Date mis-match for: BC0111208 BC Reg: "2004-03-26 00:00:00", OrgBook: ""
-Corp Name mis-match for: BC0441779 BC Reg: "0441779 B.C. LTD.", OrgBook: "441779 B.C. LTD."
-Topic not found for: BC1383101
 
 ### What steps are needed to resolve the issue?
 
@@ -65,18 +65,10 @@ Log into the affected OCP environment and run the scripts in the following order
 ./manage -p bc -e prod deleteTopic BC0441779
 ./manage -e prod requeueOrganization 0441779
 ./manage -e prod queueOrganization 1383101
-./manage -e test runPipeline
+./manage -e prod runPipeline
 ```
 
-Running the commands above in following order will solve the data mis-match issue and there wont be any data disperancy between Orgbook and BC Registries.
-
-The first line and third line represents the status of corporation "BC0111208" in OrgBook is incorrect and must be deleted and re-processed.
-
-The second line and fourth line will Requeue "0111208" and "0441779" in BC Registries if that hasnt already been processed.
-
-The fifth line will queue "0111208" in BC Registries if that hasnt already been processed.
-
-Running the ```./manage -e test runPipeline``` script in von bc registries will resolve any timing related issues.
+Running the ```./manage -e prod runPipeline``` script in von bc registries will resolve any timing related issues.
 
 In order to verify, browse to ""orgbook.gov.bc.ca"" and search for the reported corporation numbers to ensure the reported issues are resolved now.
 

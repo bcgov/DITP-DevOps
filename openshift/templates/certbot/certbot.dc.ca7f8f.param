@@ -1,0 +1,19 @@
+#=========================================================
+# OpenShift template parameters for:
+# Component: .
+# Template File: ../openshift/templates/certbot/certbot.dc.yaml
+#=========================================================
+CERTBOT_DEBUG=false
+CERTBOT_DELETE_ACME_ROUTES=true
+CERTBOT_DRYRUN=false
+CERTBOT_EMAIL=
+CERTBOT_STAGING=false
+CERTBOT_SERVER=https://acme-v02.api.letsencrypt.org/directory
+CERTBOT_SUBSET=false
+CERTBOT_CERT_PER_HOST=true
+CRON_SCHEDULE=0 0 * * 1,4
+CRON_SUSPEND=false
+IMAGE_REGISTRY=image-registry.openshift-image-registry.svc:5000
+IMAGE_NAMESPACE=ca7f8f-tools
+IMAGE_NAME=certbot
+IMAGE_TAG=latest

@@ -14,7 +14,7 @@ The following workflow describes the steps to confirm and resolve a BC Registrie
 
 In this example, the corporation registration date and corporation name mis-match represents that there is data mis-match between Orgbook and BC Reg. In order to fix the data issue, the topic needs to be deleted in OrgBook, and must be requeued from BC Registries.
 
-Running the ./manage commands above in following order will solve the data mis-match issue and there wont be any data disperancy between Orgbook and BC Registries.
+Running the./manage commands in following order will solve the data mis-match issue and data disperancy between Orgbook and BC Registries.
 
 The deleteTopic command represents the status of corporation "BC0111208" in OrgBook is incorrect and must be deleted and re-processed.
 

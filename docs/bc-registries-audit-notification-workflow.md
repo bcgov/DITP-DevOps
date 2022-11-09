@@ -10,24 +10,18 @@ The following workflow describes the steps to confirm and resolve a BC Registrie
 
 ![BC-Registries-Audit-Notification](./images/bc-registries-audit-notification.png)
 
-### Explaination of the alert
+There are three parts (separate messages) associated to each BC Registries Audit Notification, as shown above.  The first provides details on the discrepancies found between the OrgBook and the BC Registries data, the second indicates the [orgbook-configurations `./manage` script](#orgbook-configurations-manage-script) and [BC Registries Agent Configurations `./manage` script](#bc-registries-agent-configurations-manage-script) commands you need to run in order to rectify the discrepancies, and the third section provides a summary of the number of each type of discrepancy and a list of the affected corporation records for each type.
 
-In this example, the corporation registration date and corporation name mis-match represents that there is data mis-match between Orgbook and BC Reg. In order to fix the data issue, the topic needs to be deleted in OrgBook, and must be requeued from BC Registries.
+In this example there are three discrepancies that need to be fixed:
+1) The registration date for BC0111208 is missing from the OrgBook.
+2) The name for BC0441779 is missing a leading `0` in the OrgBook
+3) The record for BC1383101 is missing from the OrgBook
 
-Running the./manage commands in following order will solve the data mis-match issue and data disperancy between Orgbook and BC Registries.
-
-The deleteTopic command represents the status of corporation "BC0111208" in OrgBook is incorrect and must be deleted and re-processed.
-
-The requeue command  will requeue the corporation "0111208" and "0441779" in BC Registries if that hasnt already been processed.
-
-The queue command will queue the corporation "1383101" in BC Registries if that hasnt already been processed.
-
-##  About the BC Registries Audit Scripts
+## About the BC Registries Audit Scripts
 
 ### What does it take for the BC Reg and OrgBook data to pass the audit?
 
-The data must exist in both the BC Registries and OrgBook Databases, and the data must match exactly.  To match, the corporation name, corporation status, corporation type, business number, registration number, and  jurisdiction of the business in both BC Registries and OrgBook must all match.
-
+The data must exist in both the BC Registries and OrgBook Databases, and the data must match exactly.  To match, the corporation’s name, corporation status, corporation type, business number, registration number, and jurisdiction of the business in both BC Registries and OrgBook must all match.
 
 ### What is the impact of the data being out of sync?
 
@@ -36,43 +30,42 @@ When the data is out of sync, the data contained in the OrgBook is outdated and 
 
 ### What affects the audit results?
 
-Audit results are affected by seveal factors:
+Audit results are affected by several factors:
 
-Manual updates to data in BC registries
-- Some updates are made manually and are not associated with event records.  The BC Registry Agent's event processor relies on the event records to detect changes.  Without these records the changes do not get replicated to the OrgBook automatically and the descrepancies will not appear until the audit scripts detect them.
+Manual updates to data in BC Registries
+- Some updates are made manually and are not associated with event records.  The BC Registry Agent's event processor relies on the event records to detect changes.  Without these records the changes do not get replicated to the OrgBook automatically and the discrepancies will not appear until the audit scripts detect them.
 
 Timing
-- The BC Registry Agent's event processor runs on a schedule.  So does the audit script.  The schedule for the audit script is offset from that of the event processor to help ensure the event processor has completed a run before the audit scripts are run.  Even with the offset in the schedules, there are times when the audit script will complete while the event processor still has work to do.  In these cases the audit script will report a descrepancy, most commonly a corp missing from the OrgBook, and by the time you search for the record in the OrgBook the descrepancy has already been rectified.
+- The BC Registry Agent's event processor runs on a schedule.  So does the audit script.  The schedule for the audit script is offset from that of the event processor to help ensure the event processor has completed a run before the audit scripts are run.  Even with the offset in the schedules, there are times when the audit script will complete while the event processor still has work to do.  In these cases the audit script will report a discrepancy, most commonly a corp missing from the OrgBook, and by the time you search for the record in the OrgBook the discrepancy has already been rectified.
 
 Networking issues and unexpected pod evacuations or restarts
 - When these situations occur, it can affect one or more of the components needed to perform the credential processing on either the BC Registries or OrgBook side.  These situations typically only cause a temporary discrepancy that will be fixed the next time the BC Registry Agent's event processor runs.
 
 
-### What steps are needed to resolve the issue?
+### What steps are needed to resolve reported issues?
 
-In order to solve the issue above:
+Luckily not all discrepancies require user intervention.  When "Wrong business number" issues are detected, they are reported, but the audit scripts also requeue the corporate records automatically providing an automated fix.
 
-Confirm the issue by browsing to ""orgbook.gov.bc.ca"" and search for the corporation number there to verify the issue received in BC Registries Audit Notification still exists.
+For all other reported issues:
+1. Confirm the issue(s) by browsing to https://orgbook.gov.bc.ca.
+2. Search for the reported corporation number(s).
+3. Review the records to confirm the reported issue(s) with the data still exist.
 
-Once the issue is confirmed
+    Once the issue is confirmed:
+    1. Log into the affected OCP environment and run scripts as indicated by the second message in the Audit Notification.  In the case of the example above, you would run the following commands.
+        ```
+        ./manage -p bc -e prod deleteTopic BC0111208
+        ./manage -e prod requeueOrganization 0111208
+        ./manage -p bc -e prod deleteTopic BC0441779
+        ./manage -e prod requeueOrganization 0441779
+        ./manage -e prod queueOrganization 1383101
+        ```
+        The commands are designed to remove the incorrect data from the OrgBook and requeue the data for processing on the BC Registries Agent side.
+    2. Run the BC Registries Agent Configurations `./manage -e prod runPipeline` script to reprocess the data.
+    3. Finally search for the corporation number(s) again using https://orgbook.gov.bc.ca
+    4. Verify the reported discrepancies have been fixed.
 
-Log into the affected OCP environment and run the scripts in the following order;
-
-
-```
-./manage -p bc -e prod deleteTopic BC0111208
-./manage -e prod requeueOrganization 0111208
-./manage -p bc -e prod deleteTopic BC0441779
-./manage -e prod requeueOrganization 0441779
-./manage -e prod queueOrganization 1383101
-./manage -e prod runPipeline
-```
-
-Running the ```./manage -e prod runPipeline``` script in von bc registries will resolve any timing related issues.
-
-In order to verify, browse to ""orgbook.gov.bc.ca"" and search for the reported corporation numbers to ensure the reported issues are resolved now.
-
-For more details on this script, please refer to [BC Registries Agent Configurations `./manage` script](#bc-registries-agent-configurations-manage-script) and [Orgbook-configurations openshift `./manage` script](#orgbook-configurations-manage-script)
+For more details on this scripts used, refer to the [BC Registries Agent Configurations `./manage` script](#bc-registries-agent-configurations-manage-script) and [Orgbook-configurations `./manage` script](#orgbook-configurations-manage-script) sections of this document.
 
 ## Digital Trust Monitoring Services OCP Environments
 
@@ -80,7 +73,7 @@ Links to the Deployment Configurations Console can be found here; [Administrator
 
 ## BC Registries Agent Configurations `./manage` script
 
-General information regarding the bcgov/von-bc-registries-agent-configurations openshift `./manage` script can be found here; [bcgov/von-bc-registries-agent-configurations `./manage` script](./bc-registries-agent-configurations-manage-script.md)
+General information regarding the bcgov/von-bc-registries-agent-configurations `./manage` script can be found here; [bcgov/von-bc-registries-agent-configurations `./manage` script](./bc-registries-agent-configurations-manage-script.md)
 
 Specifics regarding the commands referenced in this workflow can be found here:
 - [`requeueOrganization` command](./bc-registries-agent-configurations-manage-script.md#requeueOrganization-command)
@@ -88,7 +81,7 @@ Specifics regarding the commands referenced in this workflow can be found here:
 
 ## Orgbook-configurations `./manage` script
 
-General information regarding the bcgov/orgbook-configurations openshift `./manage` script can be found here; [bcgov/orgbook-configurations openshift `./manage` script](./orgbook-configurations-manage-script.md)
+General information regarding the bcgov/orgbook-configurations `./manage` script can be found here; [bcgov/orgbook-configurations openshift `./manage` script](./orgbook-configurations-manage-script.md)
 
 Specifics regarding the commands referenced in this workflow can be found here:
 - [`DeleteTopic` command](./orgbook-configurations-manage-script.md#DeleteTopic-command)

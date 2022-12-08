@@ -1,0 +1,464 @@
+#!/bin/bash
+export MSYS_NO_PATHCONV=1
+SCRIPT_HOME="$( cd "$( dirname "$0" )" && pwd )"
+
+toLower() {
+  echo $(echo ${@} | tr '[:upper:]' '[:lower:]')
+}
+
+echoWarning (){
+  _msg=${@}
+  _yellow='\033[1;33m'
+  _nc='\033[0m' # No Color
+  echo -e "${_yellow}${_msg}${_nc}" >&2
+}
+
+echoError (){
+  _msg=${@}
+  _red='\033[0;31m'
+  _nc='\033[0m' # No Color
+  echo -e "${_red}${_msg}${_nc}" >&2
+}
+
+printAndWaitForYes() {
+  _msg=${@}
+  if [ -z "${_msg}" ]; then
+    echo -e \\n"printAndWaitForYes; Missing parameter!"\\n
+    exit 1
+  fi
+
+  echoWarning "\n${_msg}"
+  read -r -p $'\e[33mWould you like to continue? [y/n]\e[0m ' response
+  echo
+  # https://stackoverflow.com/a/3232082
+  if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+function isInstalled () {
+  rtnVal=$(type "$1" >/dev/null 2>&1)
+  rtnCd=$?
+  if [ ${rtnCd} -ne 0 ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+function isCurlInstalled () {
+  CURL_EXE=curl
+  if ! isInstalled ${CURL_EXE}; then
+    echoError "The ${CURL_EXE} executable is required and was not found on your path."
+    echoError "If your shell of choice doesn't come with curl preinstalled, try installing it using either [Homebrew](https://brew.sh/) (MAC) or [Chocolatey](https://chocolatey.org/) (Windows)."
+    exit 1
+  fi
+}
+
+function isJQInstalled () {
+  JQ_EXE=jq
+  if ! isInstalled ${JQ_EXE}; then
+    echoError "The ${JQ_EXE} executable is required and was not found on your path."
+    echoError "Installation instructions can be found here: https://stedolan.github.io/jq/download"
+    echoError "Alternatively, a package manager such as Chocolatey (Windows) or Brew (Mac) can be used to install this dependecy."
+    exit 1
+  fi
+}
+
+# =================================================================================================================
+# Usage:
+# -----------------------------------------------------------------------------------------------------------------
+usage () {
+  cat <<-EOF
+
+  Allows you to manage certain aspects of project environment.
+
+  Usage:
+    $0 [options] [commands]
+
+  Commands:
+  ========
+    ToDo: DOcs
+
+EOF
+}
+
+function getTokenUrl() {
+  baseUrl=${1}
+  realm=${2}
+  echo "${baseUrl}/auth/realms/${realm}/protocol/openid-connect/token"
+}
+
+function getAuthToken() {
+  tokenUrl=${1}
+  clientId=${2}
+  clientSecret=${3}
+  tokenName=${4}
+
+  if [ -z ${tokenUrl} ] || [ -z ${tokenName} ]; then
+    echoError "You MUST supply both 'tokenUrl' and 'tokenName' parameters."
+    echoWarning "Usage - getAuthToken <tokenUrl> [clientId] [clientSecret] <tokenName>"
+    return 1
+  fi
+
+  if [ -z "${clientId}" ]; then
+    echo
+    read -rep $"Please enter the client id for the connection to ${tokenUrl}:$(echo $'\n> ')" ${!clientId@}
+  fi
+
+  if [ -z "${clientSecret}" ]; then
+    echo
+    read -srep $"Please enter the client secret for '${clientId}' when connecting to ${tokenUrl}:$(echo $'\n> ')" ${!clientSecret@}
+    echo -e "\n"
+  fi
+
+  echo -e "Retrieving auth token for '${clientId}' from ${tokenUrl} ..."
+  tokenJson=$(${CURL_EXE} \
+            -s \
+            -X "POST" \
+            -H "accept: application/json" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "grant_type=client_credentials" \
+            --data-urlencode "client_id=${clientId}" \
+            --data-urlencode "client_secret=${clientSecret}" \
+            "${tokenUrl}")
+
+  if [[ "${tokenJson}" == *"error"* ]]; then
+    echoError "${tokenJson}"
+    return 1
+  fi
+
+  export ${tokenName}="Authorization: $(${JQ_EXE} -nr "${tokenJson} | .token_type") $(${JQ_EXE} -nr "${tokenJson} | .access_token")"
+}
+
+function copyIdpAndMappers() {
+  sourceBaseUrl=${1}
+  sourceRealm=${2}
+  sourceToken=${3}
+
+  destBaseUrl=${4}
+  destRealm=${5}
+  destToken=${6}
+
+  idpName=${7}
+
+  copyIdp "${sourceBaseUrl}" \
+          "${sourceRealm}" \
+          "${sourceToken}" \
+          "${destBaseUrl}" \
+          "${destRealm}" \
+          "${destToken}" \
+          "${idpName}"
+
+  if (( ${?} != 0 )); then
+    if ! printAndWaitForYes "An error occured while copying the IDP.  Please review the error."; then
+      exit 1
+    fi
+  fi
+
+  copyIdpMappers "${sourceBaseUrl}" \
+                  "${sourceRealm}" \
+                  "${sourceToken}" \
+                  "${destBaseUrl}" \
+                  "${destRealm}" \
+                  "${destToken}" \
+                  "${idpName}"
+}
+
+function copyIdp() {
+  sourceBaseUrl=${1}
+  sourceRealm=${2}
+  sourceToken=${3}
+
+  destBaseUrl=${4}
+  destRealm=${5}
+  destToken=${6}
+
+  idpName=${7}
+
+  sourceIdpUrl="${sourceBaseUrl}/auth/admin/realms/${sourceRealm}/identity-provider/instances/${idpName}"
+  destIdpUrl="${destBaseUrl}/auth/admin/realms/${destRealm}/identity-provider/instances"
+
+  sourceIdp=$(${CURL_EXE} \
+            -s \
+            -X GET \
+            -H "accept: application/json" \
+            -H "${destToken}" \
+            "${destIdpUrl}/${idpName}")
+
+  if [[ "${sourceIdp}" != *"404 Not Found"* ]]; then
+    echo -e "\nThe IDP, '${idpName}', already exists in ${destIdpUrl}."
+    return 0
+  fi
+
+  sourceIdp=$(${CURL_EXE} \
+            -s \
+            -X GET \
+            -H "accept: application/json" \
+            -H "${sourceToken}" \
+            "${sourceIdpUrl}")
+
+  echo -e "\nCopying the '${idpName}' IDP from ${sourceIdpUrl} to ${destIdpUrl} ..."
+  destPostIdpResponse=$(${CURL_EXE} \
+                      -s \
+                      -X POST \
+                      -H "accept: application/json" \
+                      -H "Content-Type: application/json" \
+                      -H "${destToken}" \
+                      --data-raw "${sourceIdp}" \
+                      "${destIdpUrl}")
+
+  if [[ "${destPostIdpResponse}" == *"error"* ]]; then
+    echoError "${destPostIdpResponse}"
+    return 1
+  fi
+}
+
+function copyIdpMappers() {
+  sourceBaseUrl=${1}
+  sourceRealm=${2}
+  sourceToken=${3}
+
+  destBaseUrl=${4}
+  destRealm=${5}
+  destToken=${6}
+
+  idpName=${7}
+
+  sourceMapperUrl="${sourceBaseUrl}/auth/admin/realms/${sourceRealm}/identity-provider/instances/${idpName}/mappers"
+  destMapperUrl="${destBaseUrl}/auth/admin/realms/${destRealm}/identity-provider/instances/${idpName}/mappers"
+
+  sourceIdpMappers=$(${CURL_EXE} \
+                      -s \
+                      -X GET \
+                      -H "accept: application/json" \
+                      -H "${sourceToken}" \
+                      "${sourceMapperUrl}")
+
+  destIdpMappers=$(${CURL_EXE} \
+                  -s \
+                  -X GET \
+                  -H "accept: application/json" \
+                  -H "${destToken}" \
+                  "${destMapperUrl}")
+
+  echo
+  sourceMapperCount=$(${JQ_EXE} -nr "${sourceIdpMappers} | length")
+  for (( counter=0; counter<${sourceMapperCount}; counter++ )); do
+    sourceIdpMapper=$(${JQ_EXE} -nrc "${sourceIdpMappers} | .[${counter}]")
+    sourceIdpMapperName=$(${JQ_EXE} -nr "${sourceIdpMapper} | .name")
+
+    destIdpMapper=$(${JQ_EXE} -nr "${destIdpMappers} | .[] | select(.name ==\"${sourceIdpMapperName}\")")
+    if [ ! -z "${destIdpMapper}" ]; then
+      echo -e "The '${sourceIdpMapperName}' mapper already exists in ${destMapperUrl}."
+      continue
+    fi
+
+    echo "Copying mapper '${sourceIdpMapperName}' from ${sourceMapperUrl} to ${destMapperUrl} ..."
+    destIdpPostMapperResponse=$(${CURL_EXE} \
+                                -s \
+                                -X POST \
+                                -H "accept: application/json" \
+                                -H "Content-Type: application/json" \
+                                -H "${destToken}" \
+                                --data-raw "${sourceIdpMapper}" \
+                                "${destMapperUrl}")
+
+    if [[ "${destIdpPostMapperResponse}" == *"error"* ]]; then
+      echoError "${destIdpPostMapperResponse}"
+      return 1
+    fi
+  done
+}
+
+function deleteIdp() {
+  baseUrl=${1}
+  realm=${2}
+  token=${3}
+  idpName=${4}
+  idpUrl="${baseUrl}/auth/admin/realms/${realm}/identity-provider/instances/${idpName}"
+
+  echo "Deleting IDP: ${idpName} ..."
+  deleteIdpResponse=$(${CURL_EXE} \
+                        -s \
+                        -X DELETE  \
+                        -H "accept: application/json" \
+                        -H "${token}" \
+                        "${idpUrl}")
+
+  if [[ "${deleteIdpResponse}" == *"error"* ]]; then
+    echoError "${deleteIdpResponse}"
+    return 1
+  fi
+}
+
+function deleteIdpMappers() {
+  baseUrl=${1}
+  realm=${2}
+  token=${3}
+  idpName=${4}
+  mapperUrl="${baseUrl}/auth/admin/realms/${realm}/identity-provider/instances/${idpName}/mappers"
+
+  idpMappers=$(${CURL_EXE} \
+              -s \
+              -X GET \
+              -H "accept: application/json" \
+              -H "${token}" \
+              "${mapperUrl}")
+
+  mapperCount=$(${JQ_EXE} -nr "${idpMappers} | length")
+  if (( ${mapperCount}==0 )); then
+    echoWarning "\nNothing to do.  The ${idpName} IDP does not contain any mappers."
+  fi
+
+  for (( counter=0; counter<${mapperCount}; counter++ )); do
+    mapperId=$(${JQ_EXE} -nr "${idpMappers} | .[${counter}].id")
+    mapperName=$(${JQ_EXE} -nr "${idpMappers} | .[${counter}].name")
+
+    echo "Deleting IDP '${mapperName}' mapper from ${idpName} ..."
+    deleteMapperResponse=$(${CURL_EXE} \
+                          -s \
+                          -X DELETE  \
+                          -H "accept: application/json" \
+                          -H "${token}" \
+                          "${mapperUrl}/${mapperId}")
+
+    if [[ "${deleteMapperResponse}" == *"error"* ]]; then
+      echoError "${deleteMapperResponse}"
+      return 1
+    fi
+  done
+}
+# =================================================================================================================
+
+pushd ${SCRIPT_HOME} >/dev/null
+_cmd=$(toLower ${1})
+shift
+
+case "${_cmd}" in
+  copyidpandmappers)
+    isCurlInstalled
+    isJQInstalled
+
+    sourceBaseUrl=${1:-https://dev.oidc.gov.bc.ca}
+    sourceRealm=${2:-gzyg46lx}
+    sourceToken=""
+    tokenUrl=$(getTokenUrl "${sourceBaseUrl}" "${sourceRealm}")
+    getAuthToken "${tokenUrl}" "${sourceClientId}" "${sourceClientSecret}" "${!sourceToken@}"
+
+    destBaseUrl=${3:-https://dev.loginproxy.gov.bc.ca}
+    destRealm=${4:-digitaltrust-citz}
+    destToken=""
+    tokenUrl=$(getTokenUrl "${destBaseUrl}" "${destRealm}")
+    getAuthToken "${tokenUrl}" "${destClientId}" "${destClientSecret}" "${!destToken@}"
+
+    idpName=${5:-bcsc}
+
+    copyIdpAndMappers "${sourceBaseUrl}" \
+                      "${sourceRealm}" \
+                      "${sourceToken}" \
+                      "${destBaseUrl}" \
+                      "${destRealm}" \
+                      "${destToken}" \
+                      "${idpName}"
+    ;;
+
+  copyidp)
+    isCurlInstalled
+    isJQInstalled
+
+    sourceBaseUrl=${1:-https://dev.oidc.gov.bc.ca}
+    sourceRealm=${2:-gzyg46lx}
+    sourceToken=""
+    tokenUrl=$(getTokenUrl "${sourceBaseUrl}" "${sourceRealm}")
+    getAuthToken "${tokenUrl}" "${sourceClientId}" "${sourceClientSecret}" "${!sourceToken@}"
+
+    destBaseUrl=${3:-https://dev.loginproxy.gov.bc.ca}
+    destRealm=${4:-digitaltrust-citz}
+    destToken=""
+    tokenUrl=$(getTokenUrl "${destBaseUrl}" "${destRealm}")
+    getAuthToken "${tokenUrl}" "${destClientId}" "${destClientSecret}" "${!destToken@}"
+
+    idpName=${5:-bcsc}
+
+    copyIdp "${sourceBaseUrl}" \
+            "${sourceRealm}" \
+            "${sourceToken}" \
+            "${destBaseUrl}" \
+            "${destRealm}" \
+            "${destToken}" \
+            "${idpName}"
+    ;;
+
+  copyidpmappers)
+    isCurlInstalled
+    isJQInstalled
+
+    sourceBaseUrl=${1:-https://dev.oidc.gov.bc.ca}
+    sourceRealm=${2:-gzyg46lx}
+    sourceToken=""
+    tokenUrl=$(getTokenUrl "${sourceBaseUrl}" "${sourceRealm}")
+    getAuthToken "${tokenUrl}" "${sourceClientId}" "${sourceClientSecret}" "${!sourceToken@}"
+
+    destBaseUrl=${3:-https://dev.loginproxy.gov.bc.ca}
+    destRealm=${4:-digitaltrust-citz}
+    destToken=""
+    tokenUrl=$(getTokenUrl "${destBaseUrl}" "${destRealm}")
+    getAuthToken "${tokenUrl}" "${destClientId}" "${destClientSecret}" "${!destToken@}"
+
+    idpName=${5:-bcsc}
+
+    copyIdpMappers "${sourceBaseUrl}" \
+                   "${sourceRealm}" \
+                   "${sourceToken}" \
+                   "${destBaseUrl}" \
+                   "${destRealm}" \
+                   "${destToken}" \
+                   "${idpName}"
+    ;;
+
+  deleteidp)
+    isCurlInstalled
+    isJQInstalled
+
+    baseUrl=${1:-https://dev.loginproxy.gov.bc.ca}
+    realm=${2:-digitaltrust-citz}
+    token=""
+    tokenUrl=$(getTokenUrl "${baseUrl}" "${realm}")
+    getAuthToken "${tokenUrl}" "${clientId}" "${clientSecret}" "${!token@}"
+
+    idpName=${3:-bcsc}
+
+    deleteIdp "${baseUrl}" \
+              "${realm}" \
+              "${token}" \
+              "${idpName}"
+    ;;
+
+  deleteidpmappers)
+    isCurlInstalled
+    isJQInstalled
+
+    baseUrl=${1:-https://dev.loginproxy.gov.bc.ca}
+    realm=${2:-digitaltrust-citz}
+    token=""
+    tokenUrl=$(getTokenUrl "${baseUrl}" "${realm}")
+    getAuthToken "${tokenUrl}" "${clientId}" "${clientSecret}" "${!token@}"
+
+    idpName=${3:-bcsc}
+
+    deleteIdpMappers "${baseUrl}" \
+                     "${realm}" \
+                     "${token}" \
+                     "${idpName}"
+    ;;
+
+  *)
+    echoWarning "Unrecognized command; ${_cmd}"
+    usage
+    ;;
+esac
+
+popd >/dev/null

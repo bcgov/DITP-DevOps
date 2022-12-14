@@ -72,16 +72,53 @@ function isJQInstalled () {
 # -----------------------------------------------------------------------------------------------------------------
 usage () {
   cat <<-EOF
-
-  Allows you to manage certain aspects of project environment.
+  Functions to copy and delete IDPs and their mappers within KeyCloak realms.
 
   Usage:
     $0 [options] [commands]
 
+    With all of the commands specifying the source and/or destination client credentials is optional.
+    If not provided on the command line, you will be asked for them when they are needed.
+
   Commands:
   ========
-    ToDo: DOcs
+    copyIdpAndMappers <sourceBaseUrl> <sourceRealm> <destBaseUrl> <destRealm> <idpName>
+      - Copy an IDP and its mappers from one KeyCloak environment to another.
 
+      Example:
+        sourceClientId="migration-user" \
+        sourceClientSecret=<Source_Client_Credentials> \
+        destClientId="migration-user"
+        destClientSecret=<Destination_Client_Credentials> \
+        ./manage copyIdpAndMappers \
+          "https://dev.oidc.gov.bc.ca" \
+          "gzyg46lx" \
+          "https://dev.loginproxy.gov.bc.ca" \
+          "digitaltrust-citz" \
+          "bcsc"
+
+    copyIdp <sourceBaseUrl> <sourceRealm> <destBaseUrl> <destRealm> <idpName>
+      - Copy and IDP from one KeyCloak environment to another.
+      - See copyIdpAndMappers for an example
+
+    copyIdpMappers <sourceBaseUrl> <sourceRealm> <destBaseUrl> <destRealm> <idpName>
+      - Copy the mappers from one IDP to another.  The IDP must already exist.
+      - See copyIdpAndMappers for an example
+
+    deleteIdp <baseUrl> <realm> <idpName>
+      - Delete an IDP from a realm.
+
+      Example:
+        clientId="migration-user" \
+        clientSecret=<Client_Credentials> \
+        ./manage deleteIdp \
+          "https://dev.loginproxy.gov.bc.ca" \
+          "digitaltrust-citz" \
+          "bcsc"
+
+    deleteidpmappers <baseUrl> <realm> <idpName>
+      - Delete the mappers from an IDP.
+      - See deleteIdp for an example.
 EOF
 }
 

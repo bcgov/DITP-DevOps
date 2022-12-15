@@ -88,7 +88,7 @@ usage () {
       Example:
         sourceClientId="migration-user" \
         sourceClientSecret=<Source_Client_Credentials> \
-        destClientId="migration-user"
+        destClientId="migration-user" \
         destClientSecret=<Destination_Client_Credentials> \
         ./manage copyIdpAndMappers \
           "https://dev.oidc.gov.bc.ca" \

@@ -9,4 +9,5 @@ The following documents contain the workflows (decision trees) and supporting de
 - [OrgBook Credential Verification Alert Workflow](./orgbook-credential-verification-alert-workflow.md)
 - [OrgBook Search Result Alert Workflow](./orgbook-search-result-alert-workflow.md)
 - [Aries Mediator Service Uptime Alert Workflow](./aries-mediator-service-alert-workflow.md)
+- [Aries Endorser Service Uptime Alert Workflow](./aries-endorser-service-alert-workflow.md)
 - [BC Registries Audit Notification Workflow](./bc-registries-audit-notification-workflow.md)

@@ -1,0 +1,19 @@
+apiVersion: ops.gov.bc.ca/v1alpha1
+kind: SysdigTeam
+metadata:
+  name: 8ad0ea-sysdigteam
+spec:
+  team:
+    description: The Sysdig Team for the PMS Namespaces
+    users:
+      - name: wade@neoterictech.ca
+        role: ROLE_TEAM_MANAGER
+
+      - name: emiliano.sune@gmail.com
+        role: ROLE_TEAM_EDIT
+
+      - name: wkingnumber2@gmail.com
+        role: ROLE_TEAM_EDIT
+
+      - name: iancostanzo@gmail.com
+        role: ROLE_TEAM_EDIT

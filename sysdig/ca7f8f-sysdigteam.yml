@@ -1,11 +1,11 @@
 apiVersion: ops.gov.bc.ca/v1alpha1
 kind: SysdigTeam
 metadata:
-  name: e79518-sysdigteam
-  namespace: e79518-tools
+  name: ca7f8f-sysdigteam
+  namespace: ca7f8f-tools
 spec:
   team:
-    description: The Sysdig Team for the OpenShift Project Set e79518
+    description: The Sysdig Team for the OpenShift Project Set ca7f8f
     users:
     - name: rajpal.chauhan@gov.bc.ca
       role: ROLE_TEAM_EDIT
@@ -13,4 +13,3 @@ spec:
       role: ROLE_TEAM_MANAGER
     - name: wkingnumber2@gmail.com
       role: ROLE_TEAM_EDIT
-      

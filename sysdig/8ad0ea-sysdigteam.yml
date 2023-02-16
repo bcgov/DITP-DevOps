@@ -17,3 +17,9 @@ spec:
 
       - name: iancostanzo@gmail.com
         role: ROLE_TEAM_EDIT
+
+      - name: rajpalc7@github
+        role: ROLE_TEAM_EDIT
+
+      - name: rajpal.chauhan@gov.bc.ca
+        role: ROLE_TEAM_EDIT

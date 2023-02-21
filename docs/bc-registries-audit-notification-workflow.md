@@ -94,7 +94,7 @@ This repository provides scripts to audit the OrgBook search database and agent 
 
 If there are companies that dont't get re-processed because the credentials were created in the credential_log table in the event processor database. Follow the steps below to troubleshoot failed credentials error:
 
-Run the `./manage -e prod runPipeline` command and verify the credentials errors. An example regarding this is shown below in the image:
+Run the `./manage -e prod getPipelineStatus` command and verify the credentials errors. An example regarding this is shown below in the image:
 
 ![BC-Registries-Audit-Errors](./images/bc-registries-audit-errors.png)
 
@@ -102,3 +102,5 @@ Run the `./manage -e prod runPipeline` command and verify the credentials errors
 Running the [`requeueFailedCreds` command](./bc-registries-agent-configurations-manage-script.md#requeueOrganization-command) command will clear and solve the status of Failed Credentials.
 
 Running the [`requeueOrganization` command](./bc-registries-agent-configurations-manage-script.md#requeueOrganization-command) and [`queueOrganization` command](./bc-registries-agent-configurations-manage-script.md#queueOrganization-command) will resolve the data issue.
+
+Run the [`runPipeline` command](./bc-registries-agent-configurations-manage-script.md#requeueOrganization-command) command at the end after all the records are requeued using the other commands.

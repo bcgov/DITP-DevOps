@@ -57,3 +57,22 @@ Executing command on 7cba16-dev/event-db-primary-20-9x4rc:
 insert into event_by_corp_filing (system_type_cd, corp_num, prev_event_id, prev_event_date, last_event_id, last_event_date, entry_date) select 'BC_REG', 'BC0002365', 0, '0001-01-01', last_event_id, last_event_date, now() from event_by_corp_filing where record_id = (select max(record_id) from event_by_corp_filing);
 INSERT 0 1
 ```
+
+## `requeueFailedCreds` command
+
+This command is used to clear and solve the status of Failed Credentials.
+
+For example:
+```
+$ ./manage -e prod requeueFailedCreds
+
+Loading settings ...
+Loading settings from /c/Git/von-bc-registries-agent-configurations/openshift/settings.sh ...
+
+
+Executing command on 7cba16-prod/event-db-primary-8-q6p2q:
+        psql -d ${POSTGRESQL_DATABASE} -ac "update credential_log set process_success = null, process_date = null, process_msg = null where process_success = 'N';"
+
+update credential_log set process_success = null, process_date = null, process_msg = null where process_success = 'N';
+UPDATE 0
+```

@@ -60,7 +60,7 @@ INSERT 0 1
 
 ## `requeueFailedCreds` command
 
-This command is used to clear and solve the status of Failed Credentials.
+This command is used to requeue any credentials (credential_log records) that have failed posting.
 
 For example:
 ```
@@ -77,9 +77,34 @@ update credential_log set process_success = null, process_date = null, process_m
 UPDATE 0
 ```
 
+## `getPipelineStatus` command
+
+This command will verify the credentials errors that has processed and provide current status of Pipeline.
+
+For example:
+```
+$ ./manage -e prod getPipelineStatus
+
+Loading settings ...
+Loading settings from /c/Git/von-bc-registries-agent-configurations/openshift/settings.sh ...
+
+BC_REG : Table: event_by_corp_filing Processed: 10017043 Outstanding: 27
+BC_REG :        event_by_corp_filing Process Errors: 0
+BC_REG : Table: corp_history_log Processed: 7775959 Outstanding: 0
+BC_REG :        corp_history_log Process Errors: 0
+BC_REG : Table: credential_log Processed: 5135210 Outstanding: 0
+BC_REG :        credential_log Process Errors: 0
+BCREG_LEAR : Table: event_by_corp_filing Processed: 15421 Outstanding: 0
+BCREG_LEAR :        event_by_corp_filing Process Errors: 0
+BCREG_LEAR : Table: corp_history_log Processed: 14281 Outstanding: 0
+BCREG_LEAR :        corp_history_log Process Errors: 0
+BCREG_LEAR : Table: credential_log Processed: 23135 Outstanding: 0
+BCREG_LEAR :        credential_log Process Errors: 0
+```
+
 ## `runPipeline` command
 
-This command is run at the end after all the records are requeued using the other commands.
+This command is used to run the pipeline for the given environment.  It runs the './run-step.sh bcreg/bc_reg_pipeline.py' pipeline script on an instance of a event-processor pod.
 
 For example:
 ```

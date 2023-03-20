@@ -97,8 +97,23 @@ usage () {
           "digitaltrust-citz" \
           "bcsc"
 
+    copyClientAndRoles <sourceBaseUrl> <sourceRealm> <destBaseUrl> <destRealm> <clientId>
+      - Copy a Client its mappers, and roles from one KeyCloak environment to another.
+
+      Example:
+        sourceClientId="migration-user" \
+        sourceClientSecret=<Source_Client_Credentials> \
+        destClientId="migration-user" \
+        destClientSecret=<Destination_Client_Credentials> \
+        ./manage copyClientAndRoles \
+          "https://dev.oidc.gov.bc.ca" \
+          "tz0e228w" \
+          "https://dev.loginproxy.gov.bc.ca" \
+          "court-services-jag" \
+          "ai-reviewer-api"
+
     copyIdp <sourceBaseUrl> <sourceRealm> <destBaseUrl> <destRealm> <idpName>
-      - Copy and IDP from one KeyCloak environment to another.
+      - Copy an IDP from one KeyCloak environment to another.
       - See copyIdpAndMappers for an example
 
     copyIdpMappers <sourceBaseUrl> <sourceRealm> <destBaseUrl> <destRealm> <idpName>
@@ -119,6 +134,14 @@ usage () {
     deleteidpmappers <baseUrl> <realm> <idpName>
       - Delete the mappers from an IDP.
       - See deleteIdp for an example.
+
+    copyClient <sourceBaseUrl> <sourceRealm> <destBaseUrl> <destRealm> <clientId>
+      - Copy a Client and its mappers from one KeyCloak environment to another.
+      - See copyClientAndRoles for an example
+
+    copyClientRoles <sourceBaseUrl> <sourceRealm> <destBaseUrl> <destRealm> <clientId>
+      - Copy the roles from one Client to another.  The Client must already exist.
+      - See copyClientAndRoles for an example
 EOF
 }
 

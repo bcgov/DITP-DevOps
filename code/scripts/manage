@@ -368,6 +368,189 @@ function deleteIdpMappers() {
     fi
   done
 }
+
+function copyClientAndRoles() {
+  sourceBaseUrl=${1}
+  sourceRealm=${2}
+  sourceToken=${3}
+
+  destBaseUrl=${4}
+  destRealm=${5}
+  destToken=${6}
+
+  clientId=${7}
+
+  copyClient "${sourceBaseUrl}" \
+             "${sourceRealm}" \
+             "${sourceToken}" \
+             "${destBaseUrl}" \
+             "${destRealm}" \
+             "${destToken}" \
+             "${clientId}"
+
+  if (( ${?} != 0 )); then
+    if ! printAndWaitForYes "An error occured while copying the Client.  Please review the error."; then
+      exit 1
+    fi
+  fi
+
+  copyClientRoles "${sourceBaseUrl}" \
+                  "${sourceRealm}" \
+                  "${sourceToken}" \
+                  "${destBaseUrl}" \
+                  "${destRealm}" \
+                  "${destToken}" \
+                  "${clientId}"
+}
+
+function copyClient() {
+  sourceBaseUrl=${1}
+  sourceRealm=${2}
+  sourceToken=${3}
+
+  destBaseUrl=${4}
+  destRealm=${5}
+  destToken=${6}
+
+  clientId=${7}
+
+  sourceClientId=$(getClientId \
+                   "${sourceBaseUrl}" \
+                   "${sourceRealm}" \
+                   "${sourceToken}" \
+                   "${clientId}")
+
+  destClientId=$(getClientId \
+                 "${destBaseUrl}" \
+                 "${destRealm}" \
+                 "${destToken}" \
+                 "${clientId}")
+
+  sourceClientUrl="${sourceBaseUrl}/auth/admin/realms/${sourceRealm}/clients/${sourceClientId}"
+  destClientUrl="${destBaseUrl}/auth/admin/realms/${destRealm}/clients"
+
+  if [ ! -z "${destClientId}" ]; then
+    echo -e "\nThe Client, '${clientId}', already exists in ${destClientUrl}."
+    return 0
+  fi
+
+  sourceClient=$(${CURL_EXE} \
+               -s \
+               -X GET \
+               -H "accept: application/json" \
+               -H "${sourceToken}" \
+               "${sourceClientUrl}")
+
+  echo -e "\nCopying the '${clientId}' Client from ${sourceClientUrl} to ${destClientUrl} ..."
+  destPostClientResponse=$(${CURL_EXE} \
+                         -s \
+                         -X POST \
+                         -H "accept: application/json" \
+                         -H "Content-Type: application/json" \
+                         -H "${destToken}" \
+                         --data-raw "${sourceClient}" \
+                         "${destClientUrl}")
+
+  if [[ "${destPostClientResponse}" == *"error"* ]]; then
+    echoError "${destPostClientResponse}"
+    return 1
+  fi
+}
+
+function copyClientRoles() {
+  sourceBaseUrl=${1}
+  sourceRealm=${2}
+  sourceToken=${3}
+
+  destBaseUrl=${4}
+  destRealm=${5}
+  destToken=${6}
+
+  clientId=${7}
+
+  sourceClientId=$(getClientId \
+                   "${sourceBaseUrl}" \
+                   "${sourceRealm}" \
+                   "${sourceToken}" \
+                   "${clientId}")
+
+  destClientId=$(getClientId \
+                 "${destBaseUrl}" \
+                 "${destRealm}" \
+                 "${destToken}" \
+                 "${clientId}")
+
+  sourceClientRolesUrl="${sourceBaseUrl}/auth/admin/realms/${sourceRealm}/clients/${sourceClientId}/roles"
+  destClientRolesUrl="${destBaseUrl}/auth/admin/realms/${destRealm}/clients/${destClientId}/roles"
+
+  if [ -z "${destClientId}" ]; then
+    echo -e "\nThe Client, '${clientId}', does not exist in ${destBaseUrl}/auth/admin/realms/${destRealm}/clients."
+    return 0
+  fi
+
+  sourceClientRoles=$(${CURL_EXE} \
+                    -s \
+                    -X GET \
+                    -H "accept: application/json" \
+                    -H "${sourceToken}" \
+                    "${sourceClientRolesUrl}")
+
+  destClientRoles=$(${CURL_EXE} \
+                  -s \
+                  -X GET \
+                  -H "accept: application/json" \
+                  -H "${destToken}" \
+                  "${destClientRolesUrl}")
+
+  echo
+  sourceClientRoleCount=$(${JQ_EXE} -nr "${sourceClientRoles} | length")
+  for (( counter=0; counter<${sourceClientRoleCount}; counter++ )); do
+    sourceClientRole=$(${JQ_EXE} -nrc "${sourceClientRoles} | .[${counter}]")
+    sourceClientRoleName=$(${JQ_EXE} -nr "${sourceClientRole} | .name")
+
+    destClientRole=$(${JQ_EXE} -nr "${destClientRoles} | .[] | select(.name ==\"${sourceClientRoleName}\")")
+    if [ ! -z "${destClientRole}" ]; then
+      echo -e "The '${sourceClientRoleName}' client role already exists in ${destClientRolesUrl}."
+      continue
+    fi
+
+    echo "Copying client role '${sourceClientRoleName}' from ${sourceClientRolesUrl} to ${destClientRolesUrl} ..."
+    destClientRolesPostResponse=$(${CURL_EXE} \
+                                -s \
+                                -X POST \
+                                -H "accept: application/json" \
+                                -H "Content-Type: application/json" \
+                                -H "${destToken}" \
+                                --data-raw "${sourceClientRole}" \
+                                "${destClientRolesUrl}")
+
+    if [[ "${destClientRolesPostResponse}" == *"error"* ]]; then
+      echoError "${destClientRolesPostResponse}"
+      return 1
+    fi
+  done
+}
+
+function getClientId() {
+  sourceBaseUrl=${1}
+  sourceRealm=${2}
+  sourceToken=${3}
+
+  clientId=${4}
+
+  sourceClientsUrl="${sourceBaseUrl}/auth/admin/realms/${sourceRealm}/clients"
+  sourceClients=$(${CURL_EXE} \
+                -s \
+                -X GET \
+                -H "accept: application/json" \
+                -H "${sourceToken}" \
+                "${sourceClientsUrl}")
+
+  # Write results to a file, as they can be too long for direct input into jq.
+  echo "${sourceClients}" > clients.json
+  clientId=$(${JQ_EXE} -r ".[] | select(.clientId ==\"${clientId}\") | .id" clients.json)
+  echo "${clientId}"
+}
 # =================================================================================================================
 
 pushd ${SCRIPT_HOME} >/dev/null
@@ -490,6 +673,87 @@ case "${_cmd}" in
                      "${realm}" \
                      "${token}" \
                      "${idpName}"
+    ;;
+
+  copyclientandroles)
+    isCurlInstalled
+    isJQInstalled
+
+    sourceBaseUrl=${1:-https://dev.oidc.gov.bc.ca}
+    sourceRealm=${2:-tz0e228w}
+    sourceToken=""
+    tokenUrl=$(getTokenUrl "${sourceBaseUrl}" "${sourceRealm}")
+    getAuthToken "${tokenUrl}" "${sourceClientId}" "${sourceClientSecret}" "${!sourceToken@}"
+
+    destBaseUrl=${3:-https://dev.loginproxy.gov.bc.ca}
+    destRealm=${4:-court-services-jag}
+    destToken=""
+    tokenUrl=$(getTokenUrl "${destBaseUrl}" "${destRealm}")
+    getAuthToken "${tokenUrl}" "${destClientId}" "${destClientSecret}" "${!destToken@}"
+
+    clientId=${5:-ai-reviewer-api}
+
+    copyClientAndRoles "${sourceBaseUrl}" \
+                       "${sourceRealm}" \
+                       "${sourceToken}" \
+                       "${destBaseUrl}" \
+                       "${destRealm}" \
+                       "${destToken}" \
+                       "${clientId}"
+    ;;
+
+  copyclient)
+    isCurlInstalled
+    isJQInstalled
+
+    sourceBaseUrl=${1:-https://dev.oidc.gov.bc.ca}
+    sourceRealm=${2:-tz0e228w}
+    sourceToken=""
+    tokenUrl=$(getTokenUrl "${sourceBaseUrl}" "${sourceRealm}")
+    getAuthToken "${tokenUrl}" "${sourceClientId}" "${sourceClientSecret}" "${!sourceToken@}"
+
+    destBaseUrl=${3:-https://dev.loginproxy.gov.bc.ca}
+    destRealm=${4:-court-services-jag}
+    destToken=""
+    tokenUrl=$(getTokenUrl "${destBaseUrl}" "${destRealm}")
+    getAuthToken "${tokenUrl}" "${destClientId}" "${destClientSecret}" "${!destToken@}"
+
+    clientId=${5:-ai-reviewer-api}
+
+    copyClient "${sourceBaseUrl}" \
+               "${sourceRealm}" \
+               "${sourceToken}" \
+               "${destBaseUrl}" \
+               "${destRealm}" \
+               "${destToken}" \
+               "${clientId}"
+    ;;
+
+  copyclientroles)
+    isCurlInstalled
+    isJQInstalled
+
+    sourceBaseUrl=${1:-https://dev.oidc.gov.bc.ca}
+    sourceRealm=${2:-tz0e228w}
+    sourceToken=""
+    tokenUrl=$(getTokenUrl "${sourceBaseUrl}" "${sourceRealm}")
+    getAuthToken "${tokenUrl}" "${sourceClientId}" "${sourceClientSecret}" "${!sourceToken@}"
+
+    destBaseUrl=${3:-https://dev.loginproxy.gov.bc.ca}
+    destRealm=${4:-court-services-jag}
+    destToken=""
+    tokenUrl=$(getTokenUrl "${destBaseUrl}" "${destRealm}")
+    getAuthToken "${tokenUrl}" "${destClientId}" "${destClientSecret}" "${!destToken@}"
+
+    clientId=${5:-ai-reviewer-api}
+
+    copyClientRoles "${sourceBaseUrl}" \
+                    "${sourceRealm}" \
+                    "${sourceToken}" \
+                    "${destBaseUrl}" \
+                    "${destRealm}" \
+                    "${destToken}" \
+                    "${clientId}"
     ;;
 
   *)

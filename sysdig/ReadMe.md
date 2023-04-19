@@ -11,8 +11,10 @@ The commands must be run from the sysdig directory, and you must be logged into 
 
 ```
 cd sysdig/
+
 # apply the manifest
 oc -n 4a9599-tools apply -f 4a9599-sysdigteam.yml
+
 # validate that the Sysdig team was created
 oc -n 4a9599-tools describe sysdig-team 
 ```

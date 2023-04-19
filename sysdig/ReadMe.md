@@ -11,13 +11,9 @@ The commands must be run from the sysdig directory, and you must be logged into 
 
 ```
 cd sysdig/
-
-oc project <PROJECT_SET_LICENSE_PLATE>-tools
-
-oc apply -f sysdig-team-sample.yaml
-
-oc describe sysdig-team <PROJECT_SET_LICENSE_PLATE> # validate that the Sysdig team was created:
-
-oc -n 4a9599-tools apply -f 4a9599-sysdigteam.yml # apply the manifest
+# apply the manifest
+oc -n 4a9599-tools apply -f 4a9599-sysdigteam.yml
+# validate that the Sysdig team was created
+oc -n 4a9599-tools describe sysdig-team 
 ```
 

@@ -100,3 +100,9 @@ Run the [`./manage -e prod getPipelineStatus`](./bc-registries-agent-configurati
 From the output above you can see there are 50 processing errors in the `credential_log` table.  This means there are 50 credentials that have not been processed and posted to the OrgBook.  To requeue these credentials for processing run the [`requeueFailedCreds`](./bc-registries-agent-configurations-manage-script.md#requeueFailedCreds-command) command.
 
 Once you have verified the credentials have been requeued, run the [`runPipeline` ](./bc-registries-agent-configurations-manage-script.md#runPipeline-command) command to process the outstanding records.
+
+There can also be a scenario where there will be no errors displayed when you run the [`runPipeline` ](./bc-registries-agent-configurations-manage-script.md#runPipeline-command) but when you will go to orgbook.gov.bc.ca to verify the reported discrepancies you will notice the company name missing there. 
+
+This happens occasionally when the records in BC Reg are updated manually. In these limited cases running `./manage -e prod requeueOrganization` will not cause the changed data to be reloaded from BC Regestries, Instead `./manage -e prod queueOrganization` needs to be run to trigger a fresh copy of the data to be pulled from BC Regestries.
+
+By running `./manage -e prod queueOrganization` you will notice the company name is visible again in orgbook.gov.bc.ca.

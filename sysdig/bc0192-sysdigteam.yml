@@ -15,3 +15,7 @@ spec:
       role: ROLE_TEAM_EDIT
     - name: emiliano.sune@gmail.com
       role: ROLE_TEAM_EDIT
+    - name: ivan.polchenko@quartech.com
+      role: ROLE_TEAM_EDIT
+    - name: lucasoneil@gmail.com
+      role: ROLE_TEAM_EDIT

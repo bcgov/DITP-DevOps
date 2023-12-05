@@ -142,6 +142,28 @@ usage () {
     copyClientRoles <sourceBaseUrl> <sourceRealm> <destBaseUrl> <destRealm> <clientId>
       - Copy the roles from one Client to another.  The Client must already exist.
       - See copyClientAndRoles for an example
+
+    getUsers <sourceBaseUrl> <sourceRealm> [<searchQuery>]
+      - Gets a list of matching userIds.  Full user account information written out to ${USER_ACCOUNT_FILE}.
+
+      Example - Get all VC users:
+        clientId="migration-user" \
+        clientSecret=<Client_Credentials> \
+        ./manage getUsers \
+          "https://dev.loginproxy.gov.bc.ca" \
+          "access-to-court-materials-jag" \
+          "%@vc"
+
+    deleteUsers <sourceBaseUrl> <sourceRealm> [<searchQuery>]
+      - Delete all matching userIds.  Full user account information written out to ${USER_ACCOUNT_FILE}.
+
+      Example - Delete all VC users:
+        clientId="migration-user" \
+        clientSecret=<Client_Credentials> \
+        ./manage deleteUsers \
+          "https://dev.loginproxy.gov.bc.ca" \
+          "access-to-court-materials-jag" \
+          "%@vc"
 EOF
 }
 
@@ -574,6 +596,72 @@ function getClientId() {
   clientId=$(${JQ_EXE} -r ".[] | select(.clientId ==\"${clientId}\") | .id" clients.json)
   echo "${clientId}"
 }
+
+export USER_ACCOUNT_FILE="users.json"
+
+function getUsers() {
+  sourceBaseUrl=${1}
+  sourceRealm=${2}
+  sourceToken=${3}
+  searchQuery=${4}
+
+  sourceUsersUrl="${sourceBaseUrl}/auth/admin/realms/${sourceRealm}/users"
+  sourceUsers=$(${CURL_EXE} \
+                -s \
+                -X GET \
+                -G \
+                -H "accept: application/json" \
+                -H "${sourceToken}" \
+                --data-urlencode "search=${searchQuery}" \
+                --data-urlencode "max=1000" \
+                "${sourceUsersUrl}")
+
+  # Write results to a file, as they can be too long for direct input into jq.
+  echo "${sourceUsers}" > ${USER_ACCOUNT_FILE}
+  userIds=$(${JQ_EXE} -r ".[] | .id" ${USER_ACCOUNT_FILE})
+  echo "${userIds}"
+}
+
+function deleteUsers() {
+  sourceBaseUrl=${1}
+  sourceRealm=${2}
+  sourceToken=${3}
+  searchQuery=${4}
+
+  userIds=$(getUsers "${sourceBaseUrl}" \
+                     "${sourceRealm}" \
+                     "${sourceToken}" \
+                     "${searchQuery}")
+
+  userIdCount=$(echo "${userIds}" | wc -l)
+
+  if (( ${userIdCount} <= 0 )); then
+    echo "No matching accounts found."
+    exit 0
+  fi
+
+  if printAndWaitForYes "Are you sure you want to delete ${userIdCount} user accounts?\nPlease review the accounts listed in ${USER_ACCOUNT_FILE} before you continue."; then
+    for userId in ${userIds}; do
+      userId=$(echo "${userId}" | tr -d '[:blank:]')
+      echo -e "Deleting user account ${userId} ..."
+
+      deleteUsersUrl="${sourceBaseUrl}/auth/admin/realms/${sourceRealm}/users"
+      deleteUserResponse=$(${CURL_EXE} \
+                          -s \
+                          -X DELETE \
+                          -H "accept: application/json" \
+                          -H "${sourceToken}" \
+                          "${deleteUsersUrl}/${userId}")
+
+      if [[ "${deleteUserResponse}" == *"error"* ]]; then
+        echoError "${deleteUserResponse}"
+        return 1
+      fi
+    done
+  else
+    echo "Good Bye"
+  fi
+}
 # =================================================================================================================
 
 pushd ${SCRIPT_HOME} >/dev/null
@@ -777,6 +865,42 @@ case "${_cmd}" in
                     "${destRealm}" \
                     "${destToken}" \
                     "${clientId}"
+    ;;
+
+  getusers)
+    isCurlInstalled
+    isJQInstalled
+
+    baseUrl=${1:-https://dev.loginproxy.gov.bc.ca}
+    realm=${2:-access-to-court-materials-jag}
+    token=""
+    tokenUrl=$(getTokenUrl "${baseUrl}" "${realm}")
+    getAuthToken "${tokenUrl}" "${clientId}" "${clientSecret}" "${!token@}"
+
+    searchQuery=${3}
+
+    getUsers "${baseUrl}" \
+              "${realm}" \
+              "${token}" \
+              "${searchQuery}"
+    ;;
+
+  deleteusers)
+    isCurlInstalled
+    isJQInstalled
+
+    baseUrl=${1:-https://dev.loginproxy.gov.bc.ca}
+    realm=${2:-access-to-court-materials-jag}
+    token=""
+    tokenUrl=$(getTokenUrl "${baseUrl}" "${realm}")
+    getAuthToken "${tokenUrl}" "${clientId}" "${clientSecret}" "${!token@}"
+
+    searchQuery=${3}
+
+    deleteUsers "${baseUrl}" \
+              "${realm}" \
+              "${token}" \
+              "${searchQuery}"
     ;;
 
   *)

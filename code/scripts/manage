@@ -633,7 +633,10 @@ function deleteUsers() {
                      "${sourceToken}" \
                      "${searchQuery}")
 
-  userIdCount=$(echo "${userIds}" | wc -l)
+  userIdCount=0
+  if [ ! -z "${userIds}" ]; then
+    userIdCount=$(echo "${userIds}" | wc -l)
+  fi
 
   if (( ${userIdCount} <= 0 )); then
     echo "No matching accounts found."

@@ -11,3 +11,4 @@ The following documents contain the workflows (decision trees) and supporting de
 - [Aries Mediator Service Uptime Alert Workflow](./aries-mediator-service-alert-workflow.md)
 - [Aries Endorser Service Uptime Alert Workflow](./aries-endorser-service-alert-workflow.md)
 - [BC Registries Audit Notification Workflow](./bc-registries-audit-notification-workflow.md)
+- [Traction Crunchy Database Troubleshooting Steps](./traction-crunchy-database-troubleshooting.md)

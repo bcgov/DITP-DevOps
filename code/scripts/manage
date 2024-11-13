@@ -145,6 +145,7 @@ usage () {
 
     getUsers <sourceBaseUrl> <sourceRealm> [<searchQuery>]
       - Gets a list of matching userIds.  Full user account information written out to ${USER_ACCOUNT_FILE}.
+      - See https://www.keycloak.org/docs-api/latest/rest-api/index.html#_users for searchQuery syntax
 
       Example - Get all VC users:
         clientId="migration-user" \
@@ -152,7 +153,7 @@ usage () {
         ./manage getUsers \
           "https://dev.loginproxy.gov.bc.ca" \
           "access-to-court-materials-jag" \
-          "%@vc"
+          "q=username:%@vc"
 
     deleteUsers <sourceBaseUrl> <sourceRealm> [<searchQuery>]
       - Delete all matching userIds.  Full user account information written out to ${USER_ACCOUNT_FILE}.
@@ -612,7 +613,7 @@ function getUsers() {
                 -G \
                 -H "accept: application/json" \
                 -H "${sourceToken}" \
-                --data-urlencode "search=${searchQuery}" \
+                --data-urlencode "${searchQuery}" \
                 --data-urlencode "max=1000" \
                 "${sourceUsersUrl}")
 

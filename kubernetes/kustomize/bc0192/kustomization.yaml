@@ -1,0 +1,4 @@
+resources:
+  - sysdigtea.yaml
+
+namespace: bc0192-tools

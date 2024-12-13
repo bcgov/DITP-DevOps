@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: certbot
+spec:
+  completionDeadlineSeconds: 300
+  output:
+    to:
+      kind: ImageStreamTag
+      name: certbot:latest
+  postCommit: {}
+  resources:
+    requests:
+      cpu: 1
+    limits:
+      cpu: 1
+  source:
+    contextDir: docker
+    git:
+      ref: feature/cert-per-host
+      uri: https://github.com/WadeBarnes/certbot.git
+    type: Git
+  strategy:
+    dockerStrategy:
+      from:
+        kind: DockerImage
+        name: docker.io/python:3.10-alpine
+    type: Docker
+  triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChange: {}

@@ -1,0 +1,54 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: certbot
+  annotations:
+    openshift.io/description: Least-privilege role for the Certbot job
+rules:
+  - apiGroups:
+      - template.openshift.io
+    resources:
+      - processedtemplates
+    verbs:
+      - create
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - list
+      - get
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - route.openshift.io
+    resources:
+      - routes
+    verbs:
+      - list
+      - get
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - route.openshift.io
+      - ""
+    attributeRestrictions: null
+    resources:
+      - routes/custom-host
+    verbs:
+      - create
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - networkpolicies
+    verbs:
+      - list
+      - get
+      - create
+      - update
+      - patch
+      - delete

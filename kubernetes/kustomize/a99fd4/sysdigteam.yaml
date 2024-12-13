@@ -2,7 +2,6 @@ apiVersion: ops.gov.bc.ca/v1alpha1
 kind: SysdigTeam
 metadata:
   name: a99fd4-sysdigteam
-  namespace: a99fd4-tools
 spec:
   team:
     description: The Sysdig Team for the OpenShift Project Set a99fd4

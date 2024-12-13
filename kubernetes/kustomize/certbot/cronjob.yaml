@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: certbot
+spec:
+  schedule: 0 0 * * 1,4
+  suspend: false
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  startingDeadlineSeconds: 60
+  jobTemplate:
+    spec:
+      backoffLimit: 6
+      activeDeadlineSeconds: 300
+      parallelism: 1
+      completions: 1
+      template:
+        metadata:
+          labels:
+            app: certbot
+            template: certbot-template
+        spec:
+          containers:
+            - name: certbot
+              image: "docker.io/bcgovimages/certbot:latest"
+              imagePullPolicy: Always
+              env:
+                - name: CERTBOT_DEBUG
+                  value: 'false'
+                - name: CERTBOT_DELETE_ACME_ROUTES
+                  value: 'true'
+                - name: CERTBOT_DRY_RUN
+                  value: 'false'
+                - name: CERTBOT_EMAIL
+                  valueFrom:
+                    secretKeyRef:
+                      name: certbot
+                      key: email
+                - name: CERTBOT_SERVER
+                  value: "https://acme-v02.api.letsencrypt.org/directory"
+                - name: CERTBOT_STAGING
+                  value: 'false'
+                - name: CERTBOT_SUBSET
+                  value: 'true'
+                - name: CERTBOT_CERT_PER_HOST
+                  value: 'false'
+              resources:
+                requests:
+                  cpu: 50m
+                limits:
+                  cpu: 250m
+              volumeMounts:
+                - mountPath: /etc/letsencrypt
+                  name: certbot-config
+          restartPolicy: Never
+          serviceAccountName: certbot
+          volumes:
+            - name: certbot-config
+              persistentVolumeClaim:
+                claimName: certbot

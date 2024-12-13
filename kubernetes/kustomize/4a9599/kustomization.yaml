@@ -1,0 +1,10 @@
+resources:
+  - sysdigteam.yaml
+  - ../certbot
+
+namespace: 4a9599-tools
+
+images:
+  - name: certbot
+    newName: image-registry.openshift-image-registry.svc:5000/4a9599-tools/certbot
+    newTag: latest

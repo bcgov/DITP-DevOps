@@ -1,7 +1,0 @@
-#=========================================================
-# OpenShift template parameters for:
-# Component: .
-# Template File: ../openshift/templates/certbot/certbot.bc.yaml
-#=========================================================
-GIT_REF=feature/cert-per-host
-GIT_URL=https://github.com/WadeBarnes/certbot.git

@@ -3,7 +3,3 @@ resources:
   - ../certbot
 
 namespace: e79518-tools
-
-images:
-  - name: certbot
-    newName: image-registry.openshift-image-registry.svc:5000/e79518-tools/certbot

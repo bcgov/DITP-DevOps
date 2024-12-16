@@ -3,8 +3,3 @@ resources:
   - ../certbot
 
 namespace: ca7f8f-tools
-
-images:
-  - name: certbot
-    newName: image-registry.openshift-image-registry.svc:5000/ca7f8f-tools/certbot
-    newTag: latest

@@ -23,15 +23,15 @@ spec:
         spec:
           containers:
             - name: certbot
-              image: "docker.io/bcgovimages/certbot:latest"
+              image: ghcr.io/bcdevops/certbot:1.0.2
               imagePullPolicy: Always
               env:
                 - name: CERTBOT_DEBUG
-                  value: 'false'
+                  value: "false"
                 - name: CERTBOT_DELETE_ACME_ROUTES
-                  value: 'true'
+                  value: "true"
                 - name: CERTBOT_DRY_RUN
-                  value: 'false'
+                  value: "false"
                 - name: CERTBOT_EMAIL
                   valueFrom:
                     secretKeyRef:
@@ -40,11 +40,11 @@ spec:
                 - name: CERTBOT_SERVER
                   value: "https://acme-v02.api.letsencrypt.org/directory"
                 - name: CERTBOT_STAGING
-                  value: 'false'
+                  value: "false"
                 - name: CERTBOT_SUBSET
-                  value: 'true'
+                  value: "true"
                 - name: CERTBOT_CERT_PER_HOST
-                  value: 'false'
+                  value: "false"
               resources:
                 requests:
                   cpu: 50m

@@ -3,8 +3,3 @@ resources:
   - ../certbot
 
 namespace: a99fd4-tools
-
-images:
-  - name: certbot
-    newName: image-registry.openshift-image-registry.svc:5000/a99fd4-tools/certbot
-    newTag: latest

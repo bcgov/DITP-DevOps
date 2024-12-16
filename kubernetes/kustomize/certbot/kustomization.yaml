@@ -3,11 +3,9 @@ kind: Kustomization
 
 commonLabels:
   app: certbot
-  
+
 resources:
-  - buildconfig.yaml
   - cronjob.yaml
-  - imagestream.yaml
   - pvc.yaml
   - role.yaml
   - rolebinding.yaml

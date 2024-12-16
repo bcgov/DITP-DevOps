@@ -1,0 +1,4 @@
+resources:
+  - sysdigtea.yaml
+
+namespace: 7cba16-tools

@@ -1,0 +1,5 @@
+resources:
+  - sysdigteam.yaml
+  - ../certbot
+
+namespace: ca7f8f-tools

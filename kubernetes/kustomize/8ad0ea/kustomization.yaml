@@ -1,0 +1,4 @@
+resources:
+  - sysdigtea.yaml
+
+namespace: 8ad0ea-tools

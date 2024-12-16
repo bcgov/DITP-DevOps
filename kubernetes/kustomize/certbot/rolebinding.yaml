@@ -1,0 +1,11 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: certbot
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: certbot
+subjects:
+  - kind: ServiceAccount
+    name: certbot

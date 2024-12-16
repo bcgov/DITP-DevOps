@@ -2,7 +2,6 @@ apiVersion: ops.gov.bc.ca/v1alpha1
 kind: SysdigTeam
 metadata:
   name: bc0192-sysdigteam
-  namespace: bc0192-tools
 spec:
   team:
     description: The Sysdig Team for the OpenShift Project Set bc0192

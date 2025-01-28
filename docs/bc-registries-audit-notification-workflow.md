@@ -66,6 +66,74 @@ For all other reported issues:
 
 For more details on this scripts used, refer to the [BC Registries Agent Configurations `./manage` script] and [Orgbook-configurations `./manage` script] sections of this document.
 
+### What if this doesn't resolve the issue?  Additional debugging steps.
+
+Sometimes the above steps don't resolve the issue.  In this case you will need to check the BC Registries issuer database to determine what has happened.
+
+You will need to "port map" the database so you can open it locally, and then run SQL queries against the database.  For example (you will need to tweak these commands for your local configuration):
+
+```bash
+oc project 7cba16-prod
+oc get pods
+oc port-forward event-db-primary-10-jgtd6 5454:5432
+```
+
+Once you log into the database, here are some useful queries:
+
+```
+select * from event_by_corp_filing
+where corp_num in ('FM0128548','0418353')
+order by record_id desc;
+```
+
+This table queues up the companies to process, and it will show you the order of events that triggered the BC Registries issuer to process these companies.
+
+```
+select * from corp_history_log
+where corp_num in ('FM0128548','0418353')
+order by record_id desc;
+```
+
+This table contains the actual data pulled from the source system (COLIN or LEAR) for the company in question.  You can review the data (in Json format, in the `corp_json` column).  One attribute of interest is the effective date of the event (for COLIN events) which is calculated based on a very complicated formula.
+
+This table records the actual credentials posted:
+
+```
+select * from credential_log
+where corp_num in ('FM0128548','0418353')
+order by record_id desc;
+```
+
+The credential data is in the `credential_json` column.
+
+All tables have the same columns to record if/when the record was processed, and what was the status:
+
+`process_date` - the date/time the record was processed
+`process_success` - whether the processing was successful
+`process_msg` - come kind of informative message
+
+To "skip" a record (not process it) you can manually update these statuses:
+
+```
+update corp_history_log
+set process_date=now(), process_success='S', process_msg='Skipping for some reason'
+where record_id = 20954342;
+```
+
+To "reprocess" a specific record, you can set these fields to `null`:
+
+```
+update credential_log
+set process_date=null, process_success=null, process_msg=null
+where record_id = 20954342;
+```
+
+Obviously, be very very careful when manually processing these records!
+
+One example scenario - Sometimes multiple credentials will be issued with the same `effective date`.  In this case OrgBook processes them in the order received and any one of these credentials could wind up being the "latest active" credential in OrgBook.  For example this has resulted in OrgBook displaying the wrong company name.
+
+In this specific scenario, locate the credential with the correct name and re-post this credential (set the `process_date` etc to `null` as per the SQL above).
+
 ## Digital Trust Monitoring Services OCP Environments
 
 Links to the Deployment Configurations Console can be found here; [Administrator - Deployment Configurations Console](./digital-trust-monitoring-services-environments.md#administrator---deployment-configurations-console)

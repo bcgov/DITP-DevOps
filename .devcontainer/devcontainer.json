@@ -9,7 +9,7 @@
 	},
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
-		"ghcr.io/devcontainers/features/docker-from-docker:1.6.0": {}
+		"ghcr.io/devcontainers/features/docker-from-docker:1.6.2": {}
 	},
 	// Allows the local folder to be redirected to the workspace folder
 	// in situations where you're mounting volumes into containers

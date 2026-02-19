@@ -13,3 +13,4 @@ The following documents contain the workflows (decision trees) and supporting de
 - [BC Registries Audit Notification Workflow](./bc-registries-audit-notification-workflow.md)
 - [Traction Crunchy Database Troubleshooting Steps](./traction-crunchy-database-troubleshooting.md)
 - [GitOps Implementation](./gitops-implementation.md)
+- [WebVH Issuer Onboarding Roadmap](./webvh-issuer-onboarding-roadmap.md)

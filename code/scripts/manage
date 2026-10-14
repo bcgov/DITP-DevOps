@@ -1,6 +1,7 @@
 #!/bin/bash
 export MSYS_NO_PATHCONV=1
 SCRIPT_HOME="$( cd "$( dirname "$0" )" && pwd )"
+INVOCATION_HOME="$PWD"
 
 toLower() {
   echo $(echo ${@} | tr '[:upper:]' '[:lower:]')
@@ -72,7 +73,7 @@ function isJQInstalled () {
 # -----------------------------------------------------------------------------------------------------------------
 usage () {
   cat <<-EOF
-  Functions to copy and delete IDPs and their mappers within KeyCloak realms.
+  Functions to manage IDPs, clients, users, and roles within KeyCloak realms.
 
   Usage:
     $0 [options] [commands]
@@ -154,6 +155,24 @@ usage () {
           "https://dev.loginproxy.gov.bc.ca" \
           "access-to-court-materials-jag" \
           "q=username:%@vc"
+
+    assignRole <baseUrl> <realm> <roleName> <usersFile> [<roleClientId>]
+      - Assign a realm role, or a client role when roleClientId is supplied.
+      - usersFile contains one exact username (email address) per line.
+      - Blank lines are ignored; Windows line endings are supported.
+      - Existing effective roles (including inherited roles) are left unchanged.
+      - Timestamped success, failure, and not-found lists are created beside usersFile.
+      - Lookup errors stop the run without classifying an unverified account as not found.
+
+      Example - Assign a client role (omit ai-reviewer-api for a realm role):
+        clientId="migration-user" \
+        clientSecret=<Client_Credentials> \
+        ./manage assignRole \
+          "https://dev.loginproxy.gov.bc.ca" \
+          "court-services-jag" \
+          "reviewer" \
+          "./list.txt" \
+          "ai-reviewer-api"
 
     deleteUsers <sourceBaseUrl> <sourceRealm> [<searchQuery>]
       - Delete all matching userIds.  Full user account information written out to ${USER_ACCOUNT_FILE}.
@@ -666,6 +685,133 @@ function deleteUsers() {
     echo "Good Bye"
   fi
 }
+function roleRequest() {
+  local token=${1}
+  shift
+  "${CURL_EXE}" -sS --fail -H "accept: application/json" -H "${token}" "$@"
+}
+
+function findRoleUser() {
+  local usersUrl=${1} token=${2} username=${3}
+  local users userId
+
+  users=$(roleRequest "${token}" --get \
+    --data-urlencode "username=${username}" --data-urlencode "exact=true" \
+    "${usersUrl}") || return 1
+  userId=$(printf '%s' "${users}" | "${JQ_EXE}" -er --arg username "${username}" '
+    if type != "array" then error("Invalid user lookup response")
+    else [.[] | select(.username == $username)] |
+      if length == 0 then ""
+      elif length == 1 and (.[0].id | type == "string" and length > 0) then .[0].id
+      else error("Ambiguous or invalid user lookup response") end
+    end') || return 1
+  if [[ -z "${userId}" ]]; then
+    return 2
+  fi
+  printf '%s\n' "${userId}"
+}
+
+function assignRoleToUser() {
+  local usersUrl=${1} token=${2} userId=${3} mappingPath=${4} role=${5}
+  local mappingsUrl="${usersUrl}/${userId}/role-mappings/${mappingPath}"
+  local roles hasRole payload
+
+  roles=$(roleRequest "${token}" "${mappingsUrl}/composite") || return 1
+  hasRole=$(printf '%s' "${roles}" | "${JQ_EXE}" -er --argjson role "${role}" '
+    if type == "array" then any(.[]; .id == $role.id) | tostring
+    else error("Invalid role mapping response") end') || return 1
+  if [[ "${hasRole}" == "true" ]]; then
+    return 0
+  fi
+
+  payload=$(printf '%s' "${role}" | "${JQ_EXE}" -c '[.]') || return 1
+  roleRequest "${token}" -X POST -H "Content-Type: application/json" \
+    --data "${payload}" "${mappingsUrl}" >/dev/null
+}
+
+function assignRole() {
+  local baseUrl=${1} realm=${2} token=${3} roleName=${4} usersFile=${5} roleClientId=${6}
+  local adminUrl="${baseUrl%/}/auth/admin/realms/${realm}"
+  local mappingPath="realm" roleUrl="${adminUrl}/roles"
+  local clients roleClientUuid encodedRole role
+  local runDirectory runId successFile failureFile notFoundFile
+  local username userId lookupStatus total=0 success=0 failure=0 notFound=0 runStatus=0
+
+  if [[ -z "${baseUrl}" || -z "${realm}" || -z "${token}" || -z "${roleName}" || ! -f "${usersFile}" || ! -r "${usersFile}" ]]; then
+    echoError "Supply a base URL, realm, token, role name, and readable users file."
+    return 1
+  fi
+
+  if [[ -n "${roleClientId}" ]]; then
+    clients=$(roleRequest "${token}" --get --data-urlencode "clientId=${roleClientId}" \
+      "${adminUrl}/clients") || return 1
+    roleClientUuid=$(printf '%s' "${clients}" | "${JQ_EXE}" -er --arg clientId "${roleClientId}" '
+      if type != "array" then error("Invalid client lookup response")
+      else [.[] | select(.clientId == $clientId)] |
+        if length == 1 and (.[0].id | type == "string" and length > 0) then .[0].id
+        else error("Client not found or ambiguous") end
+      end') || return 1
+    mappingPath="clients/${roleClientUuid}"
+    roleUrl="${adminUrl}/clients/${roleClientUuid}/roles"
+  fi
+
+  encodedRole=$("${JQ_EXE}" -nr --arg role "${roleName}" '$role | @uri') || return 1
+  role=$(roleRequest "${token}" "${roleUrl}/${encodedRole}") || return 1
+  role=$(printf '%s' "${role}" | "${JQ_EXE}" -ce --arg name "${roleName}" '
+    select(type == "object" and .name == $name and (.id | type == "string" and length > 0))') || {
+    echoError "Invalid response for role '${roleName}'."
+    return 1
+  }
+
+  runDirectory=$(mktemp -d "$(dirname "${usersFile}")/assignRole-$(date -u +%Y%m%dT%H%M%SZ)-XXXXXX") || return 1
+  runId=${runDirectory##*/}
+  successFile="${runDirectory}/success-${runId}.txt"
+  failureFile="${runDirectory}/failure-${runId}.txt"
+  notFoundFile="${runDirectory}/not-found-${runId}.txt"
+  touch "${successFile}" "${failureFile}" "${notFoundFile}" || return 1
+  echo "Result lists: ${runDirectory}"
+
+  while IFS= read -r username || [[ -n "${username}" ]]; do
+    username=${username%$'\r'}
+    [[ -z "${username}" ]] && continue
+    total=$((total + 1))
+  done < "${usersFile}"
+
+  while IFS= read -r username || [[ -n "${username}" ]]; do
+    username=${username%$'\r'}
+    [[ -z "${username}" ]] && continue
+    echo "Processing ${username} ..."
+    if userId=$(findRoleUser "${adminUrl}/users" "${token}" "${username}"); then
+      if assignRoleToUser "${adminUrl}/users" "${token}" "${userId}" "${mappingPath}" "${role}"; then
+        printf '%s\n' "${username}" >> "${successFile}" || return 1
+        success=$((success + 1))
+      else
+        echoError "Unable to assign role to '${username}'."
+        printf '%s\n' "${username}" >> "${failureFile}" || return 1
+        failure=$((failure + 1))
+        runStatus=1
+      fi
+    else
+      lookupStatus=$?
+      if [[ "${lookupStatus}" -eq 2 ]]; then
+        printf '%s\n' "${username}" >> "${notFoundFile}" || return 1
+        notFound=$((notFound + 1))
+        runStatus=1
+      else
+        echoError "Lookup failed for '${username}'; stopping without classifying this account."
+        runStatus=1
+        break
+      fi
+    fi
+  done < "${usersFile}"
+
+  printf '\nTotal users: %s\nSuccess: %s\nFailure: %s\nNot found: %s\n' \
+    "${total}" "${success}" "${failure}" "${notFound}"
+  if (( total != success + failure + notFound )); then
+    echo "Unprocessed: $((total - success - failure - notFound))"
+  fi
+  return "${runStatus}"
+}
 # =================================================================================================================
 
 pushd ${SCRIPT_HOME} >/dev/null
@@ -887,6 +1033,35 @@ case "${_cmd}" in
               "${realm}" \
               "${token}" \
               "${searchQuery}"
+    ;;
+
+  assignrole)
+    isCurlInstalled
+    isJQInstalled
+
+    if [[ $# -lt 4 || $# -gt 5 ]]; then
+      echoError "Usage - assignRole <baseUrl> <realm> <roleName> <usersFile> [<roleClientId>]"
+      exit 1
+    fi
+    baseUrl=${1}
+    realm=${2}
+    roleName=${3}
+    usersFile=${4}
+    roleClientId=${5}
+    if [[ "${usersFile}" != /* && "${usersFile}" != [[:alpha:]]:* ]]; then
+      usersFile="${INVOCATION_HOME}/${usersFile}"
+    fi
+    if [[ ! -f "${usersFile}" || ! -r "${usersFile}" ]]; then
+      echoError "Cannot read users file: ${usersFile}"
+      exit 1
+    fi
+    token=""
+    tokenUrl=$(getTokenUrl "${baseUrl%/}" "${realm}")
+    getAuthToken "${tokenUrl}" "${clientId}" "${clientSecret}" "${!token@}" || exit 1
+    assignRole "${baseUrl}" "${realm}" "${token}" "${roleName}" "${usersFile}" "${roleClientId}"
+    commandStatus=$?
+    popd >/dev/null
+    exit "${commandStatus}"
     ;;
 
   deleteusers)

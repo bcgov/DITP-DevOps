@@ -9,3 +9,9 @@
 .vscode
 .idea/*
 .vs
+
+# Script Ignores
+code/scripts/list.txt
+code/scripts/users.json
+code/scripts/clients.json
+code/scripts/temp/*
